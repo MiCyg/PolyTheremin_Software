@@ -1,0 +1,8 @@
+.program het_generator
+
+
+.wrap_target
+    set pins, 1 
+    set pins, 0 
+.wrap
+

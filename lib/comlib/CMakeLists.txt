@@ -34,6 +34,7 @@ target_include_directories(${PROJECT_NAME}
 # Link dependencies
 target_link_libraries(${PROJECT_NAME} 
     PUBLIC 
+        logger 
         pico_stdlib 
         hardware_gpio 
         FreeRTOS-Kernel-Heap4 

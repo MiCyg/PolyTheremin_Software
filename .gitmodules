@@ -1,3 +1,6 @@
 [submodule "freertos/FreeRTOS-Kernel"]
 	path = freertos/FreeRTOS-Kernel
 	url = https://github.com/FreeRTOS/FreeRTOS-Kernel.git
+[submodule "lib/CMSIS-DSP"]
+	path = lib/CMSIS-DSP
+	url = https://github.com/ARM-software/CMSIS-DSP.git

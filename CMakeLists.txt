@@ -7,7 +7,7 @@ set(PROJECT_NAME PolyTheremin_Software)
 set(VERSION_NUMBER "1.0.0")
 set(VERSION_DESCRIPITION "")
 
-set(MAIN_SRC_DIRECTORY "${CMAKE_SOURCE_DIR}/src")
+set(MAIN_SRC_DIRECTORY "${CMAKE_SOURCE_DIR}")
 set(FREERTOS_SRC_DIRECTORY "${CMAKE_SOURCE_DIR}/freertos/FreeRTOS-Kernel")
 set(FREERTOS_CFG_DIRECTORY "${CMAKE_SOURCE_DIR}/freertos")
 
@@ -39,7 +39,7 @@ set(PICO_BOARD pico CACHE STRING "Board type")
 include(pico_sdk_import.cmake)
 include(${FREERTOS_SRC_DIRECTORY}/portable/ThirdParty/GCC/RP2040/FreeRTOS_Kernel_import.cmake)
 
-project(${PROJECT_NAME} 
+project(PolyTheremin_Software
 		LANGUAGES C CXX ASM
 )
 
@@ -47,25 +47,21 @@ project(${PROJECT_NAME}
 pico_sdk_init()
 
 
-
-
-add_subdirectory(${MAIN_SRC_DIRECTORY})
 add_subdirectory(${CMAKE_SOURCE_DIR}/lib)
 
+add_executable(${PROJECT_NAME} main.c)
 
 
-
-# pico_add_extra_outputs(${PROJECT_NAME})
-
-
-# add_subdirectory(${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(${PROJECT_NAME} 
+	comlib
+    )
 
 
+pico_set_program_name(${PROJECT_NAME} nulnulnu)
+pico_set_program_version(${PROJECT_NAME} ${VERSION_NUMBER})
 
+# Modify the below lines to enable/disable output over UART/USB
+pico_enable_stdio_uart(${PROJECT_NAME} 1)
+# pico_enable_stdio_usb(${PROJECT_NAME} 1)
 
-# # Add the standard include files to the build
-# target_include_directories(${PROJECT_NAME} PRIVATE
-#         ${FREERTOS_CFG_DIRECTORY}
-# )
-
-
+pico_add_extra_outputs(${PROJECT_NAME})

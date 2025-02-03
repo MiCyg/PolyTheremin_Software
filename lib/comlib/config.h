@@ -2,6 +2,12 @@
 #ifndef __CONFIG__
 #define __CONFIG__
 
+
+
+#define PROJECT_NAME             "PolyTheremin"
+#define PROJECT_VERSION          "1.0.0"
+#define PROJECT_VERSION_DESCRIBE "First version of PolyTheremin project"
+
 #define GPIO_POLYTHEREMIN_TEST 3
 // ================================
 // ====== FREQUENCY DETECTOR ======

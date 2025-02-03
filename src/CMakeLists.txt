@@ -3,15 +3,10 @@ add_executable(${PROJECT_NAME}
     main.c
 )
 
-target_include_directories(${PROJECT_NAME} PRIVATE
-    # ${CMAKE_CURRENT_LIST_DIR}
-	${FREERTOS_CFG_DIRECTORY}
-)
+
 
 target_link_libraries(${PROJECT_NAME} 
-	pico_stdlib 
 	comlib
-    FreeRTOS-Kernel-Heap4 
     )
 
 

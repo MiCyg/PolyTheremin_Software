@@ -1,23 +1,15 @@
 #include "comlib.h"
+#include "led_anim.h"
 
 
 
 
 
-void helloTask()
-{
-	while(1)
-	{
-		printf("Hello, World!\n");
-		vTaskDelay(1000);
-	}
-}
 
 
 int main( void )
 {
 	stdio_init_all();
-
     logger_init();
 	
 	logc(MAIN, COLOR_LIGHT_GREEN, "-----------------------------------------\n");
@@ -28,7 +20,9 @@ int main( void )
 	logc(MAIN, COLOR_GREEN, "Version:         %s\n",      PROJECT_VERSION);
 	logc(MAIN, COLOR_GREEN, "Describe:       \'%s\'\n",   PROJECT_VERSION_DESCRIBE);
 
-    xTaskCreate(helloTask, "example", 1024, NULL, 0, NULL);
+	led_init();
+	led_set_anim(LED_ANIM_HEART);
+
 
     vTaskStartScheduler();
 

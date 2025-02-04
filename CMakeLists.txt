@@ -47,9 +47,24 @@ project(PolyTheremin_Software
 pico_sdk_init()
 
 
+
+
+
 add_subdirectory(${CMAKE_SOURCE_DIR}/lib)
 
 add_executable(${PROJECT_NAME} main.c)
+
+set(CMSISCORE ${CMAKE_CURRENT_SOURCE_DIR}/lib/cmsis/CMSIS_6/CMSIS/Core)
+set(CMSISDSP ${CMAKE_CURRENT_SOURCE_DIR}/lib/cmsis/CMSIS-DSP)
+
+add_subdirectory(${CMSISDSP}/Source bin_dsp)
+
+target_include_directories(${PROJECT_NAME} 
+	PRIVATE 
+		${PROJECT_SOURCE_DIR} 
+		${CMSISCORE}/Include 
+		${CMSISDSP}/Include
+)
 
 
 target_link_libraries(${PROJECT_NAME} 

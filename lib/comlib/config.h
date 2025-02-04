@@ -2,11 +2,23 @@
 #ifndef __CONFIG__
 #define __CONFIG__
 
-
-
+// Project info
 #define PROJECT_NAME             "PolyTheremin"
 #define PROJECT_VERSION          "1.0.0"
 #define PROJECT_VERSION_DESCRIBE "First version of PolyTheremin project"
+
+// system Info
+
+#define SYSTEM_OS          ""
+#define SYSTEM_UPTIME      ""
+#define SYSTEM_CPU         ""
+#define SYSTEM_RAM         ""
+#define SYSTEM_FLASH         ""
+#define SYSTEM_         ""
+
+
+
+// Hardware configuration
 
 #define GPIO_POLYTHEREMIN_TEST 3
 // ================================

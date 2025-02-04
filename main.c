@@ -12,5 +12,5 @@ int main( void )
 
     vTaskStartScheduler(); // start FreeRTOS
 	
-
+	while(1);
 }

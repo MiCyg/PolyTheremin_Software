@@ -1,6 +1,7 @@
 #include "core.h"
 #include "led_anim.h"
 #include "het_generator.h"
+#include "aquisition.h"
 
 void welcome_message(){
 	logc(CORE, COLOR_PURPLE, "\n");
@@ -22,6 +23,8 @@ void core_run()
 	led_set_anim(LED_ANIM_HEART);
 
 	het_generator_init();
+
+	aquisition_init();
 
 
 

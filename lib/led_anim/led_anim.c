@@ -10,7 +10,6 @@ TaskHandle_t led_task_handle;
 void led_update();
 
 void led_task(){
-	led_init();
 	while(1){
 		led_update();
 		vTaskDelay(pdMS_TO_TICKS(10));
@@ -20,8 +19,8 @@ void led_task(){
 
 
 void led_init(){
-	xTaskCreate(led_task, "led_task", 1024, NULL, 0, &led_task_handle);
 	ws2812_init();
+	xTaskCreate(led_task, "led_task", 1024, NULL, 0, &led_task_handle);
 	anim_time_us = 0;
 	color.raw = 0;
 }

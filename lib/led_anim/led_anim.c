@@ -19,6 +19,7 @@ void led_task(){
 
 
 void led_init(){
+	logg(LED, "Create led task\n");
 	ws2812_init();
 	xTaskCreate(led_task, "led_task", 1024, NULL, 0, &led_task_handle);
 	anim_time_us = 0;
@@ -231,7 +232,7 @@ void led_set_anim(led_animation_e anim){
 
 		anim_time_us = time_us_32();
 		anim_time_diff_us = 0;
-		// logg(LED, "Set animation number: %d\n", anim);
+		logg(LED, "Set animation number: %d\n", anim);
 	}
 	else{
 		loge(LED, "Anim number is bad.\n");

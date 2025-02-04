@@ -65,6 +65,9 @@ void core_run()
 	welcome_message();
 	het_generator_init();
 
+	led_init();
+	led_set_anim(LED_ANIM_HEART);
+
 
 	xTaskCreate(task1, "task1", 1024*4, NULL, 0, NULL);
 	xTaskCreate(led_control, "led", 1024*2 , NULL, 0, NULL);

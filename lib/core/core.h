@@ -1,5 +1,5 @@
-#ifndef __LED_ANIM__
-#define __LED_ANIM__
+#ifndef __CORE__
+#define __CORE__
 
 #include "comlib.h"
 
@@ -8,4 +8,4 @@
 
 void core_run();
 
-#endif // __LED_ANIM__
+#endif // __CORE__

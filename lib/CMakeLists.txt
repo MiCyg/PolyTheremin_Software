@@ -1,3 +1,4 @@
+add_subdirectory(core)
 add_subdirectory(comlib)
 add_subdirectory(logger)
 add_subdirectory(ws2812)

@@ -38,8 +38,11 @@ void buffer_analysis()
 		means[channel] = means[channel] >> FREQ_DET_DMA_BUFFER_NUM_IN_BYTES;
 	}
 
-
 	
+
+
+
+
 }
 
 QueueHandle_t xQueue;
@@ -57,7 +60,7 @@ void core_run()
 	freq_meas_init();
 	freq_meas_set_wrap_cb(buffer_analysis);
 
-
+	
 
 
 

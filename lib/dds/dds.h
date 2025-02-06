@@ -21,7 +21,6 @@ typedef struct dds_t{
 }dds_t;
 
 int dds_init();
-int dds_perform();
 int dds_deinit();
 
 int dds_set_sound(uint8_t osc_num, uint8_t sound_idx);

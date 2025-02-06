@@ -19,6 +19,8 @@ static uint16_t osc_idx;
 fix32_t dds_fs_fix32 = int2fix32(DDS_FS);
 // fix32_t tousand = int2fix32(1000);
 
+TaskHandle_t dds_task_handle;
+
 
 void osc_init(dds_t *osc){
 	osc->one_sample		= 0;
@@ -30,12 +32,13 @@ void irq_dma_handler() {
 	if(dma_hw->ints0 & (1u << dma_data_chan)){
 		dma_hw->ints0 = (1u << dma_data_chan);
 		oveload = true;
+		vTaskNotifyGiveFromISR(dds_task_handle, pdFALSE);
 	}
 }
 
 
 int dma_init(){
-
+	
 	// CHANNELS AND TIMER CLAIM
 
 	// (X/Y)*sys_clk, where X is the first 16 bytes and Y is the second
@@ -124,41 +127,15 @@ int dma_deinit(){
 	return 0;
 }
 
-// ============================================================
-// ========================= EXTERNAL =========================
-// dds library uses two dma's for write data to spi register. timer1 for dma is used for aquisition. 
-// Every BUFF_LEN/AUDIO_FS second interrupt data buffer depend by frequency table.
 
-int dds_init()
+void dds_task()
 {
 
-	gpio_init(GPIO_DDS_TEST);
-	gpio_set_dir(GPIO_DDS_TEST, true);
-	gpio_put(GPIO_DDS_TEST, 0);
-	
-	memset(dds_samples_buff, 0x00, sizeof(dds_samples_buff));
-	
-	// set sound
-	for (uint8_t ii = 0; ii < DAC_CHAN_NB; ii++)
+	while (1)
 	{
-		osc_init(&oscillators[ii]);
-		dds_set_sound(ii, 0);
-		dds_set_freq(ii, int2fix32(440));
-		dds_set_amp(ii, int2fix32(1));
-	}
-	
-	dac_init();
-	dma_init();
+		
+		xTaskNotifyWait( 0, 0x00, NULL, portMAX_DELAY);
 
-	return 0;
-}
-
-
-int dds_perform(){
-
-	if(oveload){
-
-		oveload = false;
 		gpio_put(GPIO_DDS_TEST, !gpio_get(GPIO_DDS_TEST));
 		memset(dds_samples_buff, 0x00, sizeof(dds_samples_buff));
 		
@@ -186,14 +163,52 @@ int dds_perform(){
 
 		// logg(DDS, "phase incr %f\n", fix322float(oscillators[osc_idx].phase_incr));
 		// log_hex(DDS, oscillators[0].sound->data, 16);
-
 	}
+
+	vTaskDelete(NULL);
+
+}
+
+
+
+// ============================================================
+// ========================= EXTERNAL =========================
+// dds library uses two dma's for write data to spi register. timer1 for dma is used for aquisition. 
+// Every BUFF_LEN/AUDIO_FS second interrupt data buffer depend by frequency table.
+
+int dds_init()
+{
+
+	gpio_init(GPIO_DDS_TEST);
+	gpio_set_dir(GPIO_DDS_TEST, true);
+	gpio_put(GPIO_DDS_TEST, 0);
+	
+	memset(dds_samples_buff, 0x00, sizeof(dds_samples_buff));
+	
+	// set sound
+	for (uint8_t ii = 0; ii < DAC_CHAN_NB; ii++)
+	{
+		osc_init(&oscillators[ii]);
+		dds_set_sound(ii, 0);
+		dds_set_freq(ii, int2fix32(440));
+		dds_set_amp(ii, int2fix32(1));
+	}
+	
+	dac_init();
+	dma_init();
+
+	xTaskCreate(dds_task, "dds_task", 6*1024, NULL, 1, &dds_task_handle);
+
 	return 0;
 }
 
 
+
 int dds_deinit()
 {
+
+	vTaskDelete(dds_task_handle);
+
 	dma_channel_unclaim(dma_data_chan);
 	dma_channel_unclaim(dma_ctr_chan);
 	// irq_set_enabled(TIMER_IRQ_0, false);

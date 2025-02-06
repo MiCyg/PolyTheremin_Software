@@ -2,7 +2,7 @@
 #include "led_anim.h"
 #include "het_generator.h"
 #include "freq_meas.h"
-// #include "cmsis.h"
+#include "dds.h"
 
 
 void welcome_message(){
@@ -18,34 +18,39 @@ void welcome_message(){
 
 
 
+// one tick -> 500us
+// Ftimer = Fsys * FREQ_DET_TIMER_X_FRACTION / FREQ_DET_TIMER_Y_FRACTION
+float ticks_to_frequency(float ticks)
+{
+	return  ( clock_get_hz(clk_sys) * FREQ_DET_TIMER_X_FRACTION ) / ( ticks * FREQ_DET_TIMER_Y_FRACTION );
+}
+
 
 uint16_t *buffer[CHANNEL_NB];
-fix32_t means[CHANNEL_NB];
+float means[CHANNEL_NB];
 void buffer_analysis()
 {
 
 	// TODO send queue
 	
-	for (uint8_t channel = 0; channel < CHANNEL_NB; channel++)
-	{
-		buffer[channel] = freq_meas_dma_buffer(channel);
+	// for (uint8_t channel = 0; channel < CHANNEL_NB; channel++)
+	// {
+	// 	buffer[channel] = freq_meas_dma_buffer(channel);
 		
-		means[channel] = 0;
-		for (uint32_t idx = 0; idx < FREQ_DET_DMA_BUFFER_NUM; idx++) 
-		{
-			means[channel] += int2fix32(*(buffer[channel]+idx));
-		}
-		means[channel] = means[channel] >> FREQ_DET_DMA_BUFFER_NUM_IN_BYTES;
-	}
+	// 	means[channel] = 0;
+	// 	for (uint32_t idx = 0; idx < FREQ_DET_DMA_BUFFER_NUM; idx++) 
+	// 	{
+	// 		means[channel] += (float)(*(buffer[channel]+idx));
+	// 	}
+	// 	means[channel] = means[channel] / FREQ_DET_DMA_BUFFER_NUM;
 
-	
-
+	// 	dds_set_freq(channel, float2fix32(ticks_to_frequency(means[channel])));
+	// }
 
 
 
 }
 
-QueueHandle_t xQueue;
 void core_run()
 {
 	welcome_message();
@@ -55,13 +60,11 @@ void core_run()
 
 	het_generator_init();
 
-	xQueue = xQueueCreate(16, sizeof(uint16_t*));
 	
 	freq_meas_init();
 	freq_meas_set_wrap_cb(buffer_analysis);
 
-	
-
+	dds_init();
 
 
 

@@ -65,7 +65,7 @@ add_executable(${PROJECT_NAME}
 )
 
 # Link libraries
-target_link_libraries(${PROJECT_NAME} PRIVATE
+target_link_libraries(${PROJECT_NAME} PUBLIC
     comlib
     core
     pico_stdlib
@@ -73,13 +73,17 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     FreeRTOS-Kernel-Heap4
 )
 
-# Configure include directories
-target_include_directories(${PROJECT_NAME} PRIVATE
-    ${CMAKE_SOURCE_DIR}/lib
-    ${FREERTOS_CFG_DIRECTORY}
-    ${CMSIS_CORE}/Include
-    ${CMSIS_DSP}/Include
-)
+# set(CMSISCORE "${CMAKE_SOURCE_DIR}/lib/CMSIS_6/CMSIS/Core")
+# set(CMSISDSP "${CMAKE_SOURCE_DIR}/lib/cmsis/CMSIS-DSP")
+# # Configure include directories
+# target_include_directories(${PROJECT_NAME} 
+# 	PUBLIC
+# 		${CMAKE_SOURCE_DIR}/lib
+# 		${FREERTOS_CFG_DIRECTORY}
+# 		${CMSISDSP}/Include
+# 		${CMSISCORE}/Include
+# )
+
 
 
 

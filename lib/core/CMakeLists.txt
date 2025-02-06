@@ -10,9 +10,9 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 	het_generator
 	aquisition
 	freq_meas
+	cmsis
 )
 target_sources(${PROJECT_NAME}
     PRIVATE
-        core.h
         core.c
 )

@@ -9,6 +9,7 @@
 #include "stdlib.h"
 #include <string.h>
 #include "logger.h"
+#include "fixfloat.h"
 
 
 #include <FreeRTOS.h>

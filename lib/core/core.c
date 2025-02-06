@@ -20,17 +20,26 @@ void welcome_message(){
 
 
 uint16_t *buffer[CHANNEL_NB];
+fix32_t means[CHANNEL_NB];
 void buffer_analysis()
 {
 
 	// TODO send queue
 	
-	buffer[0] = freq_meas_dma_buffer(CHANNEL1);
-	buffer[1] = freq_meas_dma_buffer(CHANNEL2);
-	buffer[2] = freq_meas_dma_buffer(CHANNEL3);
-	buffer[3] = freq_meas_dma_buffer(CHANNEL4);
-	
+	for (uint8_t channel = 0; channel < CHANNEL_NB; channel++)
+	{
+		buffer[channel] = freq_meas_dma_buffer(channel);
+		
+		means[channel] = 0;
+		for (uint32_t idx = 0; idx < FREQ_DET_DMA_BUFFER_NUM; idx++) 
+		{
+			means[channel] += int2fix32(*(buffer[channel]+idx));
+		}
+		means[channel] = means[channel] >> FREQ_DET_DMA_BUFFER_NUM_IN_BYTES;
+	}
 
+
+	
 }
 
 QueueHandle_t xQueue;
@@ -47,6 +56,9 @@ void core_run()
 	
 	freq_meas_init();
 	freq_meas_set_wrap_cb(buffer_analysis);
+
+
+
 
 
 

@@ -1,7 +1,9 @@
 #include "core.h"
 #include "led_anim.h"
 #include "het_generator.h"
-#include "aquisition.h"
+#include "freq_meas.h"
+// #include "arm_math.h"
+
 
 void welcome_message(){
 	logc(CORE, COLOR_PURPLE, "\n");
@@ -15,6 +17,23 @@ void welcome_message(){
 }
 
 
+
+
+uint16_t *buffer[CHANNEL_NB];
+void buffer_analysis()
+{
+
+	// TODO send queue
+	
+	buffer[0] = freq_meas_dma_buffer(CHANNEL1);
+	buffer[1] = freq_meas_dma_buffer(CHANNEL2);
+	buffer[2] = freq_meas_dma_buffer(CHANNEL3);
+	buffer[3] = freq_meas_dma_buffer(CHANNEL4);
+	
+
+}
+
+QueueHandle_t xQueue;
 void core_run()
 {
 	welcome_message();
@@ -24,7 +43,10 @@ void core_run()
 
 	het_generator_init();
 
-	aquisition_init();
+	xQueue = xQueueCreate(16, sizeof(uint16_t*));
+	
+	freq_meas_init();
+	freq_meas_set_wrap_cb(buffer_analysis);
 
 
 

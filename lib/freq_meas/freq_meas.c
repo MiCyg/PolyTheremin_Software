@@ -96,7 +96,7 @@ int timer_dma_init(){
 		loge(FREQ_DET, "Cannot claim timer for DDS.\n");	
 		return -1;
 	}
-	logg(FREQ_DET, "calm dma timer: %d\n", freq_meas_timer_channel);
+	logg(FREQ_DET, "Calm dma timer: %d\n", freq_meas_timer_channel);
 	dma_timer_set_fraction(freq_meas_timer_channel, FREQ_DET_TIMER_X_FRACTION, FREQ_DET_TIMER_Y_FRACTION);
 	return 0;
 }

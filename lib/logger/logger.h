@@ -20,6 +20,7 @@ typedef enum debug_type_e{
 	MAIN,
 	CORE,
 	THER,
+	AQUISITION,
 	FREQ_DET,
 	HET_GEN,
 	DDS,
@@ -36,17 +37,18 @@ static struct type_char_t{
 	char * prefix;	
 	bool enable;	
 } _debug_prefixes[DEB_TYPE_NUM] = {
-	[MAIN]		= {.prefix="MAIN",		.enable=true	},
-	[CORE]		= {.prefix="CORE",		.enable=true	},
-	[THER]		= {.prefix="THEREMIN",	.enable=true	},
-	[FREQ_DET]	= {.prefix="FREQDET",	.enable=true	},
-	[HET_GEN]	= {.prefix="CLOCKGEN",	.enable=true	},
-	[DDS]		= {.prefix="DDS",		.enable=true	},
-	[DAC]		= {.prefix="DAC",		.enable=true	},
-	[DECOR]		= {.prefix="DECOR",		.enable=true	},
-	[TFLITE]	= {.prefix="TFLITE",	.enable=true	},
-	[LOGGER]	= {.prefix="LOGGER",	.enable=true	},
-	[LED]		= {.prefix="LED",		.enable=true	},
+	[MAIN]			= {.prefix="MAIN",		.enable=true	},
+	[CORE]			= {.prefix="CORE",		.enable=true	},
+	[THER]			= {.prefix="THEREMIN",	.enable=true	},
+	[AQUISITION]	= {.prefix="AQST",		.enable=true	},
+	[FREQ_DET]		= {.prefix="FREQDET",	.enable=true	},
+	[HET_GEN]		= {.prefix="CLOCKGEN",	.enable=true	},
+	[DDS]			= {.prefix="DDS",		.enable=true	},
+	[DAC]			= {.prefix="DAC",		.enable=true	},
+	[DECOR]			= {.prefix="DECOR",		.enable=true	},
+	[TFLITE]		= {.prefix="TFLITE",	.enable=true	},
+	[LOGGER]		= {.prefix="LOGGER",	.enable=true	},
+	[LED]			= {.prefix="LED",		.enable=true	},
 };
 
 void logger_init();

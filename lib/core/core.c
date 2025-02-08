@@ -1,8 +1,7 @@
 #include "core.h"
 #include "led_anim.h"
 #include "het_generator.h"
-#include "freq_meas.h"
-#include "dds.h"
+#include "aquisition.h"
 
 
 void welcome_message(){
@@ -22,51 +21,52 @@ void welcome_message(){
 // Ftimer = Fsys * FREQ_DET_TIMER_X_FRACTION / FREQ_DET_TIMER_Y_FRACTION
 float ticks_to_frequency(float ticks)
 {
-	return  ( clock_get_hz(clk_sys) * FREQ_DET_TIMER_X_FRACTION ) / ( ticks * FREQ_DET_TIMER_Y_FRACTION );
-}
-
-
-uint16_t *buffer[CHANNEL_NB];
-float means[CHANNEL_NB];
-void buffer_analysis()
-{
-
-	// TODO send queue
-	
-	// for (uint8_t channel = 0; channel < CHANNEL_NB; channel++)
-	// {
-	// 	buffer[channel] = freq_meas_dma_buffer(channel);
-		
-	// 	means[channel] = 0;
-	// 	for (uint32_t idx = 0; idx < FREQ_DET_DMA_BUFFER_NUM; idx++) 
-	// 	{
-	// 		means[channel] += (float)(*(buffer[channel]+idx));
-	// 	}
-	// 	means[channel] = means[channel] / FREQ_DET_DMA_BUFFER_NUM;
-
-	// 	dds_set_freq(channel, float2fix32(ticks_to_frequency(means[channel])));
-	// }
-
-
-
+	return  ( clock_get_hz(clk_sys) * FREQ_DET_TIMER_X_FRACTION ) / ( ticks * 0.0005 * FREQ_DET_TIMER_Y_FRACTION );
 }
 
 void core_run()
 {
 	welcome_message();
 
+	gpio_init(GPIO_TEST);
+	gpio_set_dir(GPIO_TEST, true);
+	gpio_put(GPIO_TEST, 0);
+	vTaskDelay(pdMS_TO_TICKS(10));
+	gpio_put(GPIO_TEST, 1);
+	vTaskDelay(pdMS_TO_TICKS(10));
+	gpio_put(GPIO_TEST, 0);
+	vTaskDelay(pdMS_TO_TICKS(10));
+	gpio_put(GPIO_TEST, 1);
+
+
 	led_init();
 	led_set_anim(LED_ANIM_HEART);
 
 	het_generator_init();
 
+	aquisition_init();
 	
-	freq_meas_init();
-	freq_meas_set_wrap_cb(buffer_analysis);
+	// vTaskDelay(pdMS_TO_TICKS(1000));
+	// start_dma();
 
-	dds_init();
+	// dds_init();
+	// dds_set_amp(0, 0);
+	// dds_set_amp(1, 0);
+	// dds_set_amp(2, 0);
+	// dds_set_amp(3, 0);
 
 
 
+	int i = 0;
+	while (1)
+	{
+		if(2137 == i)
+		{
+			logg(CORE, "Goodbye cruel world ...\n\n");
+			return ;
+
+		}
+		vTaskDelay(1000);
+	}
 	vTaskDelete(NULL);
 }

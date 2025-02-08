@@ -6,17 +6,7 @@
 #define PROJECT_NAME             "PolyTheremin"
 #define PROJECT_VERSION          "1.0.0"
 #define PROJECT_VERSION_DESCRIBE "First version of PolyTheremin project"
-
-// system Info
-
-#define SYSTEM_OS          ""
-#define SYSTEM_UPTIME      ""
-#define SYSTEM_CPU         ""
-#define SYSTEM_RAM         ""
-#define SYSTEM_FLASH         ""
-#define SYSTEM_         ""
-
-
+#define FSYS			         125000000
 
 // Hardware configuration
 
@@ -41,8 +31,22 @@
 #define GPIO_DET_MEAS2      4
 #define GPIO_DET_MEAS3      2
 #define GPIO_DET_MEAS4      8
-#define GPIO_DET_MEAS_TEST  9
-#define GPIO_DET_MEAS_TEST2 7
+
+// ================================
+// ========== AQUISITION ==========
+
+#define AQUISITION_BUFFER_SIZE		1024
+
+// Sampling rate can only calculate on hand equation:
+// Ftimer = Fsys * AQUISITION_TIMER_X_FRACTION / AQUISITION_TIMER_Y_FRACTION
+// please change these three values for changing sampling frequency future
+#define AQUISITION_FS                100000
+#define AQUISITION_TIMER_X_FRACTION  50
+#define AQUISITION_TIMER_Y_FRACTION  62500
+
+#if (AQUISITION_FS != FSYS * AQUISITION_TIMER_X_FRACTION / AQUISITION_TIMER_Y_FRACTION)
+	#error AQUISITION_FS is not properly calculated !
+#endif
 
 // ================================
 // ===== HETERODYNE GENERAOTR =====
@@ -56,7 +60,8 @@
 #define HET_GEN1_GPIO        10
 #define HET_GEN2_GPIO        12
 #define HET_GEN3_GPIO        14
-#define HET_GEN0_FREQ        477000
+// #define HET_GEN0_FREQ        477000
+#define HET_GEN0_FREQ        495000
 #define HET_GEN1_FREQ        507000
 #define HET_GEN2_FREQ        483000
 #define HET_GEN3_FREQ        481000
@@ -72,11 +77,13 @@
 #define GPIO_DAC_TX        19
 #define GPIO_DAC_CS1    21
 #define GPIO_DAC_CS2    20 // I must change this because pinout is not match with the schematic
+#define GPIO_TEST       GPIO_DAC_CS2 
+
 
 // Sampling rate can only calculate on hand equation:
 // Ftimer = Fsys * DDS_TIMER_X_FRACTION / DDS_TIMER_Y_FRACTION
 // please change these 4 values for changing sampling frequency future
-#define DDS_FS                 50000 // proforma, but can be used
+#define DDS_FS               50000 // proforma, but can be used
 #define DDS_DELAY_US         20    // proforma, but can be used
 #define DDS_TIMER_X_FRACTION 16
 #define DDS_TIMER_Y_FRACTION 40000

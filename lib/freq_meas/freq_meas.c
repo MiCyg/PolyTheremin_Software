@@ -19,16 +19,9 @@ static inline void common_gpio_cb(uint gpio, uint32_t event_mask)
 	{
 		if (gpio == freq_det_vars[chan].gpio)
 		{
-			if(freq_det_vars[chan].gpio == GPIO_DET_MEAS1){
-				gpio_put(GPIO_DET_MEAS_TEST, 1);
-			}
 			freq_det_vars[chan].det_freq_count = pwm_get_counter(freq_det_vars[chan].pwm_slice);
 			pwm_set_counter(freq_det_vars[chan].pwm_slice, 0);
 			pwm_set_enabled(freq_det_vars[chan].pwm_slice, true);
-			if(freq_det_vars[chan].gpio == GPIO_DET_MEAS1){
-				gpio_put(GPIO_DET_MEAS_TEST, 0);
-				// logg(FREQ_DET, "det: %d\n", freq_det_vars[chan].dma_buff[0]);
-			}
 			break;
 		}
 	}
@@ -133,8 +126,6 @@ void dma_wrap_handler(){
 	if( (_dma_interrupts&0b00001111) == 0b00001111){
 		_dma_interrupts = 0;
 
-		gpio_put(GPIO_DET_MEAS_TEST2, !gpio_get(GPIO_DET_MEAS_TEST2));
-
 		if(dma_wrap_cb) dma_wrap_cb();
 
 
@@ -160,14 +151,6 @@ void dma_wrap_handler(){
 
 // ============== EXTERNAL FUNCTIONS ==============
 void freq_meas_init(){
-	gpio_init(GPIO_DET_MEAS_TEST);
-	gpio_set_dir(GPIO_DET_MEAS_TEST, true);
-	gpio_put(GPIO_DET_MEAS_TEST, 0);
-	
-	gpio_init(GPIO_DET_MEAS_TEST2);
-	gpio_set_dir(GPIO_DET_MEAS_TEST2, true);
-	gpio_put(GPIO_DET_MEAS_TEST2, 1);
-
 	timer_dma_init();
 
 	freq_chans_init();

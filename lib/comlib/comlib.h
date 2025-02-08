@@ -20,5 +20,9 @@
 
 #include "config.h"
 
+#define gpio_toggle(gpio) gpio_put(gpio, !gpio_get(gpio));
+
+
+
 
 #endif // __COMLIB__

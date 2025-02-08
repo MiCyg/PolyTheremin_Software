@@ -5,9 +5,9 @@
 
 
 
-void aquisition_init();
+int aquisition_init();
 void aquisition_deinit();
-
+void start_dma();
 
 
 #endif // __AQUISITION__

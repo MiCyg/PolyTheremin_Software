@@ -1,12 +1,11 @@
 #include "aquisition.h"
-// #include "hardware/dma.h"
-// #include "hardware/pio.h"
 #include "hardware/pwm.h"
-// #include "aquisition.pio.h"
 
 
-// use dma as buffer data from gpios registers
-static uint32_t aquisition_buffer[AQUISITION_BUFFER_SIZE];
+// use folding buffer
+uint8_t buffer_actual_idx = 0;
+uint32_t buffer[2][AQUISITION_BUFFER_SIZE];
+
 static uint aquisition_slice_num;
 SemaphoreHandle_t wrap_sempahore;
 
@@ -14,19 +13,28 @@ BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 uint32_t tmp_gpio_all;
 void get_gpios_irq()
 {
+	// TODO change to dma
+	gpio_toggle(GPIO_TEST);
 	static uint32_t aquisition_idx = 0;
 	pwm_clear_irq(aquisition_slice_num);
-
 	tmp_gpio_all = gpio_get_all();
-	aquisition_buffer[aquisition_idx] = tmp_gpio_all & ((1<<GPIO_AQUISITION_INPUT_0) |
-														(1<<GPIO_AQUISITION_INPUT_1) |
-														(1<<GPIO_AQUISITION_INPUT_2) |
-														(1<<GPIO_AQUISITION_INPUT_3));
+	buffer[buffer_actual_idx][aquisition_idx] = tmp_gpio_all & ((1<<GPIO_AQUISITION_INPUT_0) |
+																(1<<GPIO_AQUISITION_INPUT_1) |
+																(1<<GPIO_AQUISITION_INPUT_2) |
+																(1<<GPIO_AQUISITION_INPUT_3));
 	
 	aquisition_idx++;
 	aquisition_idx &= (AQUISITION_BUFFER_SIZE - 1);
-	// gpio_toggle(GPIO_TEST);
-	if(!aquisition_idx) xSemaphoreGiveFromISR(wrap_sempahore, &xHigherPriorityTaskWoken);
+	
+
+	if(!aquisition_idx) 
+	{
+		buffer_actual_idx++;
+		buffer_actual_idx &=  0x01;
+		// pwm_set_enabled(aquisition_slice_num, false);
+		xSemaphoreGiveFromISR(wrap_sempahore, &xHigherPriorityTaskWoken);
+	}
+	gpio_toggle(GPIO_TEST);
 
 }
 
@@ -168,13 +176,24 @@ void aquisition_task()
 {
 	setup_pwm_clock();
 	wrap_sempahore = xSemaphoreCreateBinary();
-	xSemaphoreGive(wrap_sempahore);
-	
+	int i =  0;
 	while(1)
 	{
 		if(xSemaphoreTake( wrap_sempahore, 100 ) == pdTRUE)
 		{
 
+			if(i < 4)
+			{
+
+				printf("\n");
+				for (uint32_t idx = 0; idx < AQUISITION_BUFFER_SIZE; idx++)
+				{
+					// if(idx % 32 == 0) printf("\n");
+					printf("%1d ", (buffer[!buffer_actual_idx][idx] & (1 << GPIO_AQUISITION_INPUT_3)) >> GPIO_AQUISITION_INPUT_3);
+				}
+				printf("\n");
+				i++;
+			}
 		}
 	}
 
@@ -186,7 +205,7 @@ int aquisition_init()
 {
 	logg(AQUISITION, "Init\n");
 
-	xTaskCreate(aquisition_task, "aquisition", 1024, NULL, 1, NULL);
+	xTaskCreate(aquisition_task, "aquisition", 4*1024, NULL, 1, NULL);
 	
 	return 0;
 }

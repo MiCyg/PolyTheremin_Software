@@ -136,7 +136,6 @@ void dds_task()
 		
 		xTaskNotifyWait( 0, 0x00, NULL, portMAX_DELAY);
 
-		// gpio_put(GPIO_DDS_TEST, !gpio_get(GPIO_DDS_TEST));
 		memset(dds_samples_buff, 0x00, sizeof(dds_samples_buff));
 		
 		osc_idx=0;
@@ -159,7 +158,6 @@ void dds_task()
 			dds_samples_buff[sample_idx] |= 0b0111000000000000;
 
 		}
-		// gpio_put(GPIO_DDS_TEST, !gpio_get(GPIO_DDS_TEST));
 
 		// logg(DDS, "phase incr %f\n", fix322float(oscillators[osc_idx].phase_incr));
 		// log_hex(DDS, oscillators[0].sound->data, 16);
@@ -179,10 +177,6 @@ void dds_task()
 int dds_init()
 {
 
-	gpio_init(GPIO_DDS_TEST);
-	gpio_set_dir(GPIO_DDS_TEST, true);
-	gpio_put(GPIO_DDS_TEST, 0);
-	
 	memset(dds_samples_buff, 0x00, sizeof(dds_samples_buff));
 	
 	// set sound

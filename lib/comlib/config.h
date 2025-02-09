@@ -67,10 +67,10 @@
 #define HET_GEN1_GPIO        10
 #define HET_GEN2_GPIO        12
 #define HET_GEN3_GPIO        14
-#define HET_GEN0_FREQ        523000
-#define HET_GEN1_FREQ        597000
-#define HET_GEN2_FREQ        530000
-#define HET_GEN3_FREQ        530000
+#define HET_GEN0_FREQ        580000
+#define HET_GEN1_FREQ        578000
+#define HET_GEN2_FREQ        532000
+#define HET_GEN3_FREQ        526000
 
 // ================================
 // ============ DDS/DAC ===========

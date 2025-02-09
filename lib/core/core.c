@@ -13,6 +13,7 @@ void welcome_message(){
 	logc(CORE, COLOR_GREEN, "Meas sys clock:  %.2fMHz\n",   (float)(clock_get_hz(clk_sys))/1000000.0);
 	logc(CORE, COLOR_GREEN, "Version:         %s\n",      PROJECT_VERSION);
 	logc(CORE, COLOR_GREEN, "Describe:       \'%s\'\n",   PROJECT_VERSION_DESCRIBE);
+	logc(CORE, COLOR_GREEN, "Core cpu:        %d\n",   get_core_num());
 }
 
 
@@ -35,8 +36,6 @@ void core_run()
 	gpio_put(GPIO_TEST, 1);
 	vTaskDelay(pdMS_TO_TICKS(10));
 	gpio_put(GPIO_TEST, 0);
-	vTaskDelay(pdMS_TO_TICKS(10));
-	gpio_put(GPIO_TEST, 1);
 
 
 	led_init();
@@ -45,7 +44,7 @@ void core_run()
 	het_generator_init();
 
 	aquisition_init();
-	
+ 	
 	// vTaskDelay(pdMS_TO_TICKS(1000));
 	// start_dma();
 

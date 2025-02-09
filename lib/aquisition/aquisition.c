@@ -34,7 +34,6 @@ void get_gpios_irq()
 		// pwm_set_enabled(aquisition_slice_num, false);
 		xSemaphoreGiveFromISR(wrap_sempahore, &xHigherPriorityTaskWoken);
 	}
-	// gpio_toggle(GPIO_TEST);
 
 }
 
@@ -187,9 +186,8 @@ void analyse_task()
 	{
 		if(xSemaphoreTake( wrap_sempahore, 100 ) == pdTRUE)
 		{
-			// gpio_toggle(GPIO_TEST);
 			fix32_t avgs[4];
-			
+
 			for (uint16_t i = 0; i < AQUISITION_BUFFER_SIZE; i++)
 			{
 				avgs[0] += int2fix32((buffer_to_analyse()[i] & (1<<GPIO_AQUISITION_INPUT_0) ) >> GPIO_AQUISITION_INPUT_0);
@@ -201,7 +199,6 @@ void analyse_task()
 			avgs[1] = avgs[1] >> AQUISITION_BUFFER_SIZE_BITS;
 			avgs[2] = avgs[2] >> AQUISITION_BUFFER_SIZE_BITS;
 			avgs[3] = avgs[3] >> AQUISITION_BUFFER_SIZE_BITS;
-			// gpio_toggle(GPIO_TEST);
 
 			if(i%10 == 0)
 			{

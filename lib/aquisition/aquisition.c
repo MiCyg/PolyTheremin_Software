@@ -2,41 +2,47 @@
 #include "hardware/pwm.h"
 
 
-// use folding buffer
-uint8_t buffer_actual_idx = 0;
-uint32_t buffer[2][AQUISITION_BUFFER_SIZE];
+// create folding buffer
+#define BUFFER_FOLD_NUM 2 //? I think this can't be a settable parameter
+static uint32_t buffer_actual_idx = 0;
+static uint32_t buffer[BUFFER_FOLD_NUM][AQUISITION_BUFFER_SIZE];
 
 static uint aquisition_slice_num;
-SemaphoreHandle_t wrap_sempahore;
+static SemaphoreHandle_t wrap_sempahore;
 
-BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-uint32_t tmp_gpio_all;
+static BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 void get_gpios_irq()
 {
 	// TODO change to dma
-	gpio_toggle(GPIO_TEST);
-	static uint32_t aquisition_idx = 0;
+	static uint32_t tmp_gpio_all;
+	static uint32_t idx = 0;
+
 	pwm_clear_irq(aquisition_slice_num);
 	tmp_gpio_all = gpio_get_all();
-	buffer[buffer_actual_idx][aquisition_idx] = tmp_gpio_all & ((1<<GPIO_AQUISITION_INPUT_0) |
-																(1<<GPIO_AQUISITION_INPUT_1) |
-																(1<<GPIO_AQUISITION_INPUT_2) |
-																(1<<GPIO_AQUISITION_INPUT_3));
+	buffer[buffer_actual_idx][idx] = tmp_gpio_all & ( (1<<GPIO_AQUISITION_INPUT_0) |
+																 (1<<GPIO_AQUISITION_INPUT_1) |
+																 (1<<GPIO_AQUISITION_INPUT_2) |
+																 (1<<GPIO_AQUISITION_INPUT_3) );
 	
-	aquisition_idx++;
-	aquisition_idx &= (AQUISITION_BUFFER_SIZE - 1);
-	
+	idx++;
+	idx &= AQUISITION_BUFFER_SIZE_MASK;
 
-	if(!aquisition_idx) 
+	if(!idx) 
 	{
 		buffer_actual_idx++;
-		buffer_actual_idx &=  0x01;
+		buffer_actual_idx &= 0x01;
 		// pwm_set_enabled(aquisition_slice_num, false);
 		xSemaphoreGiveFromISR(wrap_sempahore, &xHigherPriorityTaskWoken);
 	}
-	gpio_toggle(GPIO_TEST);
+	// gpio_toggle(GPIO_TEST);
 
 }
+
+static inline uint32_t *buffer_to_analyse()
+{
+	return buffer[(buffer_actual_idx-1) & 0x01];
+}
+
 
 
 
@@ -172,7 +178,7 @@ void setup_pwm_clock() {
 // */
 
 
-void aquisition_task()
+void analyse_task()
 {
 	setup_pwm_clock();
 	wrap_sempahore = xSemaphoreCreateBinary();
@@ -181,19 +187,34 @@ void aquisition_task()
 	{
 		if(xSemaphoreTake( wrap_sempahore, 100 ) == pdTRUE)
 		{
-
-			if(i < 4)
+			// gpio_toggle(GPIO_TEST);
+			fix32_t avgs[4];
+			
+			for (uint16_t i = 0; i < AQUISITION_BUFFER_SIZE; i++)
 			{
-
-				printf("\n");
-				for (uint32_t idx = 0; idx < AQUISITION_BUFFER_SIZE; idx++)
-				{
-					// if(idx % 32 == 0) printf("\n");
-					printf("%1d ", (buffer[!buffer_actual_idx][idx] & (1 << GPIO_AQUISITION_INPUT_3)) >> GPIO_AQUISITION_INPUT_3);
-				}
-				printf("\n");
-				i++;
+				avgs[0] += int2fix32((buffer_to_analyse()[i] & (1<<GPIO_AQUISITION_INPUT_0) ) >> GPIO_AQUISITION_INPUT_0);
+				avgs[1] += int2fix32((buffer_to_analyse()[i] & (1<<GPIO_AQUISITION_INPUT_1) ) >> GPIO_AQUISITION_INPUT_1);
+				avgs[2] += int2fix32((buffer_to_analyse()[i] & (1<<GPIO_AQUISITION_INPUT_2) ) >> GPIO_AQUISITION_INPUT_2);
+				avgs[3] += int2fix32((buffer_to_analyse()[i] & (1<<GPIO_AQUISITION_INPUT_3) ) >> GPIO_AQUISITION_INPUT_3);
 			}
+			avgs[0] = avgs[0] >> AQUISITION_BUFFER_SIZE_BITS;
+			avgs[1] = avgs[1] >> AQUISITION_BUFFER_SIZE_BITS;
+			avgs[2] = avgs[2] >> AQUISITION_BUFFER_SIZE_BITS;
+			avgs[3] = avgs[3] >> AQUISITION_BUFFER_SIZE_BITS;
+			// gpio_toggle(GPIO_TEST);
+
+			if(i%10 == 0)
+			{
+				logg(AQUISITION, "avgs: %.2f, %.2f, %.2f, %.2f\n", 
+																	fix322float(avgs[0]),
+																	fix322float(avgs[1]),
+																	fix322float(avgs[2]),
+																	fix322float(avgs[3])
+																	);
+			}
+
+
+			i++;
 		}
 	}
 
@@ -205,7 +226,7 @@ int aquisition_init()
 {
 	logg(AQUISITION, "Init\n");
 
-	xTaskCreate(aquisition_task, "aquisition", 4*1024, NULL, 1, NULL);
+	xTaskCreate(analyse_task, "analyse", 4*1024, NULL, 1, NULL);
 	
 	return 0;
 }

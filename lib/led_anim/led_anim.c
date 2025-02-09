@@ -1,5 +1,5 @@
 #include "led_anim.h"
-
+// TOOD CHANGE ALL TIMES ON us to miliseconds or ticks, use freertos mechanics to sample
 
 static color_t color;
 static uint32_t anim_time_diff_us;
@@ -10,6 +10,7 @@ TaskHandle_t led_task_handle;
 void led_update();
 
 void led_task(){
+	logg(LED, "Create led task on core %d\n", get_core_num());
 	while(1){
 		led_update();
 		vTaskDelay(pdMS_TO_TICKS(10));
@@ -19,7 +20,6 @@ void led_task(){
 
 
 void led_init(){
-	logg(LED, "Create led task\n");
 	ws2812_init();
 	xTaskCreate(led_task, "led_task", 1024, NULL, 10, &led_task_handle);
 	anim_time_us = 0;
@@ -122,7 +122,7 @@ void led_anim_blink_of_dead(){
 
 #define HEART_BRIGHT 0.2
 #define HEART_COLOR 0x0055ff20
-#define HEART_TIME 2000000
+#define HEART_TIME 5000000
 
 void led_anim_heart(){
 	anim_time_diff_us = time_us_32()-anim_time_us;

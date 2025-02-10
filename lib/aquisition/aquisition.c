@@ -84,6 +84,8 @@ void analyse_task()
 	float32_t signal_in[AQUISITION_BUFFER_SIZE];
 	float32_t signal_fft_cmplx[AQUISITION_BUFFER_SIZE];
 	float32_t signal_fft_mag[AQUISITION_BUFFER_SIZE];
+	float32_t max_bin;
+	uint32_t max_bin_index;
 
 
 	wrap_sempahore = xSemaphoreCreateBinary();
@@ -93,43 +95,21 @@ void analyse_task()
 		if(xSemaphoreTake( wrap_sempahore, 100 ) == pdTRUE)
 		{
 
-			if(i == 3)
+			if(i%10 == 0)
 			{
+				gpio_toggle(GPIO_TEST);
 				for (uint16_t i = 0; i < AQUISITION_BUFFER_SIZE; i++)		
 				{
 					signal_in[i] = (gpio_buffer()[i] & (1<<GPIO_AQUISITION_INPUT_1) ) >> GPIO_AQUISITION_INPUT_1;
 				}
-
 				arm_copy_f32(signal_in, signal_fft_cmplx, AQUISITION_BUFFER_SIZE);
-
-				float32_t max_bin;
-				uint32_t max_bin_index;
 				arm_rfft_fast_f32(&fft, signal_fft_cmplx, signal_fft_mag, 0);
-
 				arm_cmplx_mag_f32(signal_fft_mag, signal_fft_mag, AQUISITION_BUFFER_SIZE>>1);
-
 				arm_max_f32(signal_fft_mag+1, (AQUISITION_BUFFER_SIZE>>1)-1, &max_bin, &max_bin_index);
+				gpio_toggle(GPIO_TEST);
 
+				// logg(AQUISITION, "max_bin: %.0f on index %.0f, f: %fHz\n", (double)max_bin, (double)max_bin_index, (double)max_bin_index*AQUISITION_FS/AQUISITION_BUFFER_SIZE); //! hardfa ult
 
-				logg(AQUISITION, "max_bin: %.0f on index %.0f, frequency: %.0f\n", (double)max_bin, (double)max_bin_index, ((double)max_bin_index+1.0f)*AQUISITION_FS/AQUISITION_BUFFER_SIZE); //! hardfa ult
-
-				logg(AQUISITION, "SIGNAL IN\n");
-				for (uint32_t idx = 0; idx < AQUISITION_BUFFER_SIZE; idx++)
-				{
-					if(idx%32 == 0) printf("\n");
-					printf("%2.0f ", (double)signal_in[idx]);
-				}
-				printf("\n");
-
-
-
-				logg(AQUISITION, "SIGNAL FFT\n");
-				for (uint32_t idx = 0; idx < AQUISITION_BUFFER_SIZE>>1; idx++)
-				{
-					if(idx%16 == 0) printf("\n");
-					printf("%6.0f ", (double)signal_fft_mag[idx]);
-				}
-				printf("\n");
 			}
 
 

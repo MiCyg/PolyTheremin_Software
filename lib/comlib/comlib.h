@@ -25,7 +25,7 @@
 #define panic_check(error_condition, message, ...) \
 	do { \
 		if (error_condition) { \
-			panic("\033[1;31m> File: %s\n> Function: %s\n> line: %d\n> Error message: " message "\033[0m", __FILE__, __FUNCTION__, __LINE__, ##__VA_ARGS__); \
+			panic("\033[1;31m> Location: %s:%d\n> Function: %s()\n> Note: " message "\033[0m", __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__); \
 		} \
 	} while (0)
 

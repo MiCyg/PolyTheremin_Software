@@ -6,7 +6,6 @@
 #define PROJECT_NAME             "PolyTheremin"
 #define PROJECT_VERSION          "1.0.0"
 #define PROJECT_VERSION_DESCRIBE "First version of PolyTheremin project"
-#define FSYS			         125000000
 
 // Hardware configuration
 
@@ -34,9 +33,9 @@
 // ========== AQUISITION ==========
 #define AQUISITION_PIO_INSTANCE pio0
 
-#define AQUISITION_BUFFER_SIZE        1024
-#define AQUISITION_BUFFER_SIZE_MASK   1023
-#define AQUISITION_BUFFER_SIZE_BITS   10
+#define AQUISITION_BUFFER_SIZE        256
+#define AQUISITION_BUFFER_SIZE_MASK   255
+#define AQUISITION_BUFFER_SIZE_BITS   8
 
 #if (1 << AQUISITION_BUFFER_SIZE_BITS) != AQUISITION_BUFFER_SIZE
 #error Bad aquisition buffer size in bytes
@@ -50,7 +49,7 @@
 // Sampling rate can only calculate on hand equation:
 // Ftimer = Fsys * AQUISITION_TIMER_X_FRACTION / AQUISITION_TIMER_Y_FRACTION
 // please change these three values for changing sampling frequency future
-#define AQUISITION_FS                100000
+#define AQUISITION_FS                90000
 
 #define GPIO_AQUISITION_INPUT_2      2
 #define GPIO_AQUISITION_INPUT_1      4

@@ -27,9 +27,11 @@ target_include_directories(${PROJECT_NAME}
 target_compile_options(${PROJECT_NAME} PUBLIC 
     -Wsign-compare
     -Wdouble-promotion
-    -Ofast -ffast-math
+    -Ofast 
+	-ffast-math
     -DNDEBUG
-    -Wall -Wextra  
+    -Wall 
+	-Wextra  
 	# -Werror
     -fshort-enums 
     # -fshort-wchar

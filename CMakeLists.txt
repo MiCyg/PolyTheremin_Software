@@ -73,26 +73,6 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
     FreeRTOS-Kernel-Heap4
 )
 
-# set(CMSISCORE "${CMAKE_SOURCE_DIR}/lib/CMSIS_6/CMSIS/Core")
-# set(CMSISDSP "${CMAKE_SOURCE_DIR}/lib/cmsis/CMSIS-DSP")
-# # Configure include directories
-# target_include_directories(${PROJECT_NAME} 
-# 	PUBLIC
-# 		${CMAKE_SOURCE_DIR}/lib
-# 		${FREERTOS_CFG_DIRECTORY}
-# 		${CMSISDSP}/Include
-# 		${CMSISCORE}/Include
-# )
-
-
-
-
-
-
-
-
-
-
 # Pico specific configurations
 # pico_set_program_name(${PROJECT_NAME} "PolyTheremin")
 # pico_set_program_version(${PROJECT_NAME} ${VERSION_NUMBER})

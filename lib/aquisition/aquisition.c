@@ -1,5 +1,6 @@
 #include "aquisition.h"
 #include "hardware/pwm.h"
+#include "cmsis.h"
 
 
 // create folding buffer
@@ -176,7 +177,8 @@ void setup_pwm_clock() {
 	}
 // */
 
-
+static float32_t analyse_buffer[4][AQUISITION_BUFFER_SIZE];
+static float32_t means[4];
 void analyse_task()
 {
 	setup_pwm_clock();
@@ -186,28 +188,29 @@ void analyse_task()
 	{
 		if(xSemaphoreTake( wrap_sempahore, 100 ) == pdTRUE)
 		{
-			fix32_t avgs[4];
-
-			for (uint16_t i = 0; i < AQUISITION_BUFFER_SIZE; i++)
-			{
-				avgs[0] += int2fix32((buffer_to_analyse()[i] & (1<<GPIO_AQUISITION_INPUT_0) ) >> GPIO_AQUISITION_INPUT_0);
-				avgs[1] += int2fix32((buffer_to_analyse()[i] & (1<<GPIO_AQUISITION_INPUT_1) ) >> GPIO_AQUISITION_INPUT_1);
-				avgs[2] += int2fix32((buffer_to_analyse()[i] & (1<<GPIO_AQUISITION_INPUT_2) ) >> GPIO_AQUISITION_INPUT_2);
-				avgs[3] += int2fix32((buffer_to_analyse()[i] & (1<<GPIO_AQUISITION_INPUT_3) ) >> GPIO_AQUISITION_INPUT_3);
-			}
-			avgs[0] = avgs[0] >> AQUISITION_BUFFER_SIZE_BITS;
-			avgs[1] = avgs[1] >> AQUISITION_BUFFER_SIZE_BITS;
-			avgs[2] = avgs[2] >> AQUISITION_BUFFER_SIZE_BITS;
-			avgs[3] = avgs[3] >> AQUISITION_BUFFER_SIZE_BITS;
 
 			if(i%10 == 0)
 			{
-				logg(AQUISITION, "avgs: %.2f, %.2f, %.2f, %.2f\n", 
-																	fix322float(avgs[0]),
-																	fix322float(avgs[1]),
-																	fix322float(avgs[2]),
-																	fix322float(avgs[3])
-																	);
+				gpio_toggle(GPIO_TEST);
+				for (uint16_t i = 0; i < AQUISITION_BUFFER_SIZE; i++)		
+				{
+					analyse_buffer[0][i] = (buffer_to_analyse()[i] & (1<<GPIO_AQUISITION_INPUT_0) ) >> GPIO_AQUISITION_INPUT_0;
+					analyse_buffer[1][i] = (buffer_to_analyse()[i] & (1<<GPIO_AQUISITION_INPUT_1) ) >> GPIO_AQUISITION_INPUT_1;
+					analyse_buffer[2][i] = (buffer_to_analyse()[i] & (1<<GPIO_AQUISITION_INPUT_2) ) >> GPIO_AQUISITION_INPUT_2;
+					analyse_buffer[3][i] = (buffer_to_analyse()[i] & (1<<GPIO_AQUISITION_INPUT_3) ) >> GPIO_AQUISITION_INPUT_3;
+				}
+
+
+			
+				for (uint32_t i = 0; i < CHAN_NUM; i++)
+				{
+					arm_mean_f32(analyse_buffer[i], AQUISITION_BUFFER_SIZE, &means[i]);	
+				}
+			
+
+
+				// logg(AQUISITION, "avgs: %.2f, %.2f, %.2f, %.2f\n", means[0], means[1], means[2], means[3]);
+				gpio_toggle(GPIO_TEST);
 			}
 
 

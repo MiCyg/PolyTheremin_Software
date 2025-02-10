@@ -5,7 +5,6 @@ add_subdirectory(ws2812)
 add_subdirectory(led_anim)
 add_subdirectory(het_generator)
 add_subdirectory(aquisition)
-# add_subdirectory(freq_meas)
 # add_subdirectory(dds)
-# add_subdirectory(cmsis)
+add_subdirectory(cmsis)
 

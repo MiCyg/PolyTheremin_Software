@@ -21,9 +21,9 @@ void get_gpios_irq()
 	pwm_clear_irq(aquisition_slice_num);
 	tmp_gpio_all = gpio_get_all();
 	buffer[buffer_actual_idx][idx] = tmp_gpio_all & ( (1<<GPIO_AQUISITION_INPUT_0) |
-																 (1<<GPIO_AQUISITION_INPUT_1) |
-																 (1<<GPIO_AQUISITION_INPUT_2) |
-																 (1<<GPIO_AQUISITION_INPUT_3) );
+														(1<<GPIO_AQUISITION_INPUT_1) |
+														(1<<GPIO_AQUISITION_INPUT_2) |
+														(1<<GPIO_AQUISITION_INPUT_3) );
 	
 	idx++;
 	idx &= AQUISITION_BUFFER_SIZE_MASK;
@@ -38,7 +38,7 @@ void get_gpios_irq()
 
 }
 
-static inline uint32_t *buffer_to_analyse()
+static inline uint32_t *gpio_buffer()
 {
 	return buffer[(buffer_actual_idx-1) & 0x01];
 }
@@ -52,12 +52,12 @@ void setup_pwm_clock() {
     gpio_set_function(GPIO_AQUISITION_CLOCK_OUT, GPIO_FUNC_PWM);
 
     aquisition_slice_num = pwm_gpio_to_slice_num(GPIO_AQUISITION_CLOCK_OUT);
-	uint pwm_channel = pwm_gpio_to_channel(GPIO_AQUISITION_CLOCK_OUT);
+	// uint pwm_channel = pwm_gpio_to_channel(GPIO_AQUISITION_CLOCK_OUT);
 
     uint32_t sys_clk_hz = clock_get_hz(clk_sys);
     uint32_t wrap_value = (uint32_t)((float)sys_clk_hz / (float)AQUISITION_FS);
 	float real_sample_rate = (float)clock_get_hz(clk_sys)/(float)wrap_value;
-	logg(AQUISITION, "Sample rates: set: %.2f[Hz], real: %.2f[Hz]\n", (float)AQUISITION_FS, real_sample_rate);
+	logg(AQUISITION, "Sample rates: set: %.2f[Hz], real: %.2f[Hz]\n", (double)AQUISITION_FS, (double)real_sample_rate);
 
 
     pwm_set_wrap(aquisition_slice_num, wrap_value);
@@ -74,11 +74,17 @@ void setup_pwm_clock() {
 }
 
 
-static float32_t analyse_buffer[4][AQUISITION_BUFFER_SIZE];
-static float32_t means[4];
 void analyse_task()
 {
 	setup_pwm_clock();
+	arm_rfft_instance_q31 fft;
+	arm_status _status = arm_rfft_init_q31(&fft, AQUISITION_BUFFER_SIZE, 0, 0);
+	panic_check(_status != ARM_MATH_SUCCESS, "Cannot claim fft function.");
+
+	q31_t signal_in[AQUISITION_BUFFER_SIZE];
+	q31_t signal_fft[AQUISITION_BUFFER_SIZE];
+
+
 	wrap_sempahore = xSemaphoreCreateBinary();
 	int i =  0;
 	while(1)
@@ -86,28 +92,31 @@ void analyse_task()
 		if(xSemaphoreTake( wrap_sempahore, 100 ) == pdTRUE)
 		{
 
-			if(i%10 == 0)
+			if(i == 3)
 			{
-				gpio_toggle(GPIO_TEST);
+				float32_t mean;
 				for (uint16_t i = 0; i < AQUISITION_BUFFER_SIZE; i++)		
 				{
-					analyse_buffer[0][i] = (buffer_to_analyse()[i] & (1<<GPIO_AQUISITION_INPUT_0) ) >> GPIO_AQUISITION_INPUT_0;
-					analyse_buffer[1][i] = (buffer_to_analyse()[i] & (1<<GPIO_AQUISITION_INPUT_1) ) >> GPIO_AQUISITION_INPUT_1;
-					analyse_buffer[2][i] = (buffer_to_analyse()[i] & (1<<GPIO_AQUISITION_INPUT_2) ) >> GPIO_AQUISITION_INPUT_2;
-					analyse_buffer[3][i] = (buffer_to_analyse()[i] & (1<<GPIO_AQUISITION_INPUT_3) ) >> GPIO_AQUISITION_INPUT_3;
+					signal_in[i] = (gpio_buffer()[i] & (1<<GPIO_AQUISITION_INPUT_1) ) >> GPIO_AQUISITION_INPUT_1;
+					mean += signal_in[i];
 				}
 
 
-			
-				for (uint32_t i = 0; i < CHAN_NUM; i++)
-				{
-					arm_mean_f32(analyse_buffer[i], AQUISITION_BUFFER_SIZE, &means[i]);	
-				}
-			
 
-
-				// logg(AQUISITION, "avgs: %.2f, %.2f, %.2f, %.2f\n", means[0], means[1], means[2], means[3]);
 				gpio_toggle(GPIO_TEST);
+				arm_rfft_q31(&fft, signal_in, signal_fft);
+				gpio_toggle(GPIO_TEST);
+				// arm_q31_to_float(means)
+
+				// vTaskDelay(100);
+
+				// float32_t out;
+				// arm_q31_to_float(signal_in, &out, 1);
+				// for (uint32_t idx = 0; idx < AQUISITION_BUFFER_SIZE; idx++)
+				// {
+				// 	if(idx%32 == 0) printf("\n");
+				// 	printf("%ld ", signal_in[idx]);
+				// }
 			}
 
 

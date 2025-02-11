@@ -123,10 +123,15 @@ void analyse_task_old()
 
 
 
+void convert_uint16_to_q15_array(const uint16_t *input, q15_t *output, uint32_t length) {
+    for (uint32_t i = 0; i < length; i++) {
+        output[i] = (q15_t)(input[i] - 32768);
+    }
+}
+
 q15_t ticks_buffer[CHANNEL_NB][FREQ_DET_DMA_BUFFER_NUM];
 void wrap_irq()
 {
-
 	arm_copy_q15((q15_t*)freq_meas_dma_buffer(0), ticks_buffer[0], FREQ_DET_DMA_BUFFER_NUM);
 	arm_copy_q15((q15_t*)freq_meas_dma_buffer(1), ticks_buffer[1], FREQ_DET_DMA_BUFFER_NUM);
 	arm_copy_q15((q15_t*)freq_meas_dma_buffer(2), ticks_buffer[2], FREQ_DET_DMA_BUFFER_NUM);
@@ -143,17 +148,14 @@ void analyse_task()
 
 	freq_meas_init();
 	freq_meas_set_wrap_cb(wrap_irq);
-	uint32_t freq = clock_get_hz(clk_sys);
-	float32_t timer_freq;
-	arm_q31_to_float((q31_t*)&freq, &timer_freq, 1);
+
+	float32_t timer_freq = (float32_t)clock_get_hz(clk_sys);
 
 	int i = 0;
-	q15_t mean[CHAN_NUM];
-	q15_t max[CHAN_NUM];
-	q15_t min[CHAN_NUM];
 	float32_t mean_f[CHAN_NUM];
 	float32_t max_f[CHAN_NUM];
 	float32_t min_f[CHAN_NUM];
+	float32_t freq[CHAN_NUM];
 	while(1)
 	{
 		if(xSemaphoreTake( wrap_sempahore, 100 ) == pdTRUE)
@@ -161,17 +163,20 @@ void analyse_task()
 			if(i%10 == 0)
 			{
 				gpio_toggle(GPIO_TEST);
-				arm_mean_q15(ticks_buffer[0], FREQ_DET_DMA_BUFFER_NUM, &mean[0]);
-				arm_max_no_idx_q15(ticks_buffer[0], FREQ_DET_DMA_BUFFER_NUM, &max[0]);
-				arm_min_no_idx_q15(ticks_buffer[0], FREQ_DET_DMA_BUFFER_NUM, &min[0]);
-				logg(AQUISITION, "mean: %d, min: %d, max: %d\n", mean[0], min[0], max[0]);
+
+				for (uint32_t j = 0; j < FREQ_DET_DMA_BUFFER_NUM; j++)
+				{
+					ticks_buffer_f[0][j] = (float32_t)ticks_buffer[0][j];
+				}
 				
-				arm_q15_to_float(ticks_buffer[0], ticks_buffer_f[0], FREQ_DET_DMA_BUFFER_NUM);
 				arm_mean_f32(ticks_buffer_f[0], FREQ_DET_DMA_BUFFER_NUM, &mean_f[0]);
 				arm_max_no_idx_f32(ticks_buffer_f[0], FREQ_DET_DMA_BUFFER_NUM, &max_f[0]);
 				arm_min_no_idx_f32(ticks_buffer_f[0], FREQ_DET_DMA_BUFFER_NUM, &min_f[0]);
+				freq[CHAN0] = timer_freq / mean_f[0];
+
 				
-				logg(AQUISITION, "mean: %f, min: %f, max: %f\n", (double)mean_f[0], (double)min_f[0], (double)max_f[0]);
+				logg(AQUISITION, "mean: %5.2f, min: %5.2f, max: %5.2f, freq: %f\n", (double)mean_f[0], (double)min_f[0], (double)max_f[0], (double)freq[0]);
+
 
 				gpio_toggle(GPIO_TEST);
 			}

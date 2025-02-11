@@ -44,18 +44,5 @@ void core_run()
 	dds_init(&aquisitionDdsQueue);
 	aquisition_init(&aquisitionDdsQueue);
 
-
-
-	int i = 0;
-	while (1)
-	{
-		if(2137 == i)
-		{
-			logg(CORE, "Goodbye cruel world ...\n\n");
-			return ;
-
-		}
-		vTaskDelay(1000);
-	}
 	vTaskDelete(NULL);
 }

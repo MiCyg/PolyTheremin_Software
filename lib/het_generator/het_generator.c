@@ -16,14 +16,15 @@ float het_generator_program_init(PIO pio, uint sm, uint pin, float freq) {
     
 	uint16_t div_int;
     uint8_t div_frac;
-	float fract = (float)(SYS_CLK_KHZ*1000)/(freq*2);
+	
+	float fract = (float)(clock_get_hz(clk_sys)*1000)/(freq*2);
     pio_calculate_clkdiv_from_float(fract, &div_int, &div_frac);
     sm_config_set_clkdiv_int_frac(&c, div_int, div_frac);
 
     pio_sm_init(pio, sm, pio_program_offset, &c);
     pio_sm_set_enabled(pio, sm, true);
 
-	return (float)(SYS_CLK_KHZ*1000)/((float)div_int+(float)div_int/255.0)/2;
+	return (float)(clock_get_hz(clk_sys)*1000)/((float)div_int+(float)div_int/255.0)/2;
 }
 
 
@@ -37,18 +38,16 @@ void het_generator_init(){
 
 
 	float real_freq0 = het_generator_program_init(pio, 0, HET_GEN0_GPIO, HET_GEN0_FREQ);
-	logg(HET_GEN, "set frequency: %.3fkHz, real frequency: %.3fkHz\n", (float)HET_GEN0_FREQ/1000, real_freq0/1000);
+	if((uint32_t)real_freq0 != (uint32_t)HET_GEN0_FREQ) logg(HET_GEN, "Generator[0] freq was changed -> Set: %dHz, Real: %.0fHz\n", HET_GEN0_FREQ, real_freq0);
 
 	float real_freq1 = het_generator_program_init(pio, 1, HET_GEN1_GPIO, HET_GEN1_FREQ);
-	logg(HET_GEN, "set frequency: %.3fkHz, real frequency: %.3fkHz\n", (float)HET_GEN1_FREQ/1000, real_freq1/1000);
+	if((uint32_t)real_freq1 != (uint32_t)HET_GEN1_FREQ) logg(HET_GEN, "Generator[1] freq was changed -> Set: %dHz, Real: %.0fHz\n", HET_GEN1_FREQ, real_freq1);
 
 	float real_freq2 = het_generator_program_init(pio, 2, HET_GEN2_GPIO, HET_GEN2_FREQ);
-	logg(HET_GEN, "set frequency: %.3fkHz, real frequency: %.3fkHz\n", (float)HET_GEN2_FREQ/1000, real_freq2/1000);
+	if((uint32_t)real_freq2 != (uint32_t)HET_GEN2_FREQ) logg(HET_GEN, "Generator[2] freq was changed -> Set: %dHz, Real: %.0fHz\n", HET_GEN2_FREQ, real_freq2);
 
 	float real_freq3 = het_generator_program_init(pio, 3, HET_GEN3_GPIO, HET_GEN3_FREQ);
-	logg(HET_GEN, "set frequency: %.3fkHz, real frequency: %.3fkHz\n", (float)HET_GEN3_FREQ/1000, real_freq3/1000);
-
-
+	if((uint32_t)real_freq3 != (uint32_t)HET_GEN3_FREQ) logg(HET_GEN, "Generator[3] freq was changed -> Set: %dHz, Real: %.0fHz\n", HET_GEN3_FREQ, real_freq3);
 
 }
 

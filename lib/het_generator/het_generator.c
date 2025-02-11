@@ -17,14 +17,14 @@ float het_generator_program_init(PIO pio, uint sm, uint pin, float freq) {
 	uint16_t div_int;
     uint8_t div_frac;
 	
-	float fract = (float)(clock_get_hz(clk_sys)*1000)/(freq*2);
+	float fract = (float)(clock_get_hz(clk_sys))/(freq*2);
     pio_calculate_clkdiv_from_float(fract, &div_int, &div_frac);
     sm_config_set_clkdiv_int_frac(&c, div_int, div_frac);
 
     pio_sm_init(pio, sm, pio_program_offset, &c);
     pio_sm_set_enabled(pio, sm, true);
 
-	return (float)(clock_get_hz(clk_sys)*1000)/((float)div_int+(float)div_int/255.0)/2;
+	return (float)(clock_get_hz(clk_sys))/((float)div_int+(float)div_int/255.0)/2;
 }
 
 

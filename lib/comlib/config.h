@@ -13,8 +13,11 @@
 // ====== FREQUENCY DETECTOR ======
 // 4 channels of dma
 // 4 channels of pwm
-#define FREQ_DET_DMA_BUFFER_NUM             256
-#define FREQ_DET_DMA_BUFFER_NUM_IN_BYTES    8
+#define FREQ_DET_DMA_BUFFER_NUM             32
+#define FREQ_DET_DMA_BUFFER_NUM_IN_BYTES    5
+#if (1 << FREQ_DET_DMA_BUFFER_NUM_IN_BYTES) != FREQ_DET_DMA_BUFFER_NUM
+#error Bad value of FREQ_DET_DMA_BUFFER_NUM_IN_BYTES
+#endif
 
 // Sampling rate can only calculate on hand equation:
 // Ftimer = Fsys * FREQ_DET_TIMER_X_FRACTION / FREQ_DET_TIMER_Y_FRACTION
@@ -23,6 +26,11 @@
 #define FREQ_DET_DELAY_US             500 // proforma, but can be used
 #define FREQ_DET_TIMER_X_FRACTION     1
 #define FREQ_DET_TIMER_Y_FRACTION     62500
+
+#if FREQ_DET_FS != 1000000/FREQ_DET_DELAY_US
+#error Bad value of FREQ_DET_DELAY_US
+#endif
+
 
 #define GPIO_DET_MEAS1      6
 #define GPIO_DET_MEAS2      4
@@ -33,9 +41,9 @@
 // ========== AQUISITION ==========
 #define AQUISITION_PIO_INSTANCE pio0
 
-#define AQUISITION_BUFFER_SIZE        256
-#define AQUISITION_BUFFER_SIZE_MASK   255
-#define AQUISITION_BUFFER_SIZE_BITS   8
+#define AQUISITION_BUFFER_SIZE        1024
+#define AQUISITION_BUFFER_SIZE_MASK   1023
+#define AQUISITION_BUFFER_SIZE_BITS   10
 
 #if (1 << AQUISITION_BUFFER_SIZE_BITS) != AQUISITION_BUFFER_SIZE
 #error Bad aquisition buffer size in bytes
@@ -49,7 +57,7 @@
 // Sampling rate can only calculate on hand equation:
 // Ftimer = Fsys * AQUISITION_TIMER_X_FRACTION / AQUISITION_TIMER_Y_FRACTION
 // please change these three values for changing sampling frequency future
-#define AQUISITION_FS                90000
+#define AQUISITION_FS                75000
 
 #define GPIO_AQUISITION_INPUT_2      2
 #define GPIO_AQUISITION_INPUT_1      4

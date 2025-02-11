@@ -1,5 +1,6 @@
 #include "aquisition.h"
 #include "hardware/pwm.h"
+#include "freq_meas.h"
 #include "cmsis.h"
 
 
@@ -75,7 +76,7 @@ void setup_pwm_clock() {
 
 
 arm_rfft_fast_instance_f32 fft;
-void analyse_task()
+void analyse_task_old()
 {
 	setup_pwm_clock();
 	arm_status _status = arm_rfft_fast_init_f32(&fft, AQUISITION_BUFFER_SIZE);
@@ -121,11 +122,76 @@ void analyse_task()
 }
 
 
+
+q15_t ticks_buffer[CHANNEL_NB][FREQ_DET_DMA_BUFFER_NUM];
+void wrap_irq()
+{
+
+	arm_copy_q15((q15_t*)freq_meas_dma_buffer(0), ticks_buffer[0], FREQ_DET_DMA_BUFFER_NUM);
+	arm_copy_q15((q15_t*)freq_meas_dma_buffer(1), ticks_buffer[1], FREQ_DET_DMA_BUFFER_NUM);
+	arm_copy_q15((q15_t*)freq_meas_dma_buffer(2), ticks_buffer[2], FREQ_DET_DMA_BUFFER_NUM);
+	arm_copy_q15((q15_t*)freq_meas_dma_buffer(3), ticks_buffer[3], FREQ_DET_DMA_BUFFER_NUM);
+
+	xSemaphoreGiveFromISR(wrap_sempahore, &xHigherPriorityTaskWoken);
+}
+
+
+float32_t ticks_buffer_f[CHANNEL_NB][FREQ_DET_DMA_BUFFER_NUM];
+void analyse_task()
+{
+	wrap_sempahore = xSemaphoreCreateBinary();
+
+	freq_meas_init();
+	freq_meas_set_wrap_cb(wrap_irq);
+	uint32_t freq = clock_get_hz(clk_sys);
+	float32_t timer_freq;
+	arm_q31_to_float((q31_t*)&freq, &timer_freq, 1);
+
+	int i = 0;
+	q15_t mean[CHAN_NUM];
+	q15_t max[CHAN_NUM];
+	q15_t min[CHAN_NUM];
+	float32_t mean_f[CHAN_NUM];
+	float32_t max_f[CHAN_NUM];
+	float32_t min_f[CHAN_NUM];
+	while(1)
+	{
+		if(xSemaphoreTake( wrap_sempahore, 100 ) == pdTRUE)
+		{
+			if(i%10 == 0)
+			{
+				gpio_toggle(GPIO_TEST);
+				arm_mean_q15(ticks_buffer[0], FREQ_DET_DMA_BUFFER_NUM, &mean[0]);
+				arm_max_no_idx_q15(ticks_buffer[0], FREQ_DET_DMA_BUFFER_NUM, &max[0]);
+				arm_min_no_idx_q15(ticks_buffer[0], FREQ_DET_DMA_BUFFER_NUM, &min[0]);
+				logg(AQUISITION, "mean: %d, min: %d, max: %d\n", mean[0], min[0], max[0]);
+				
+				arm_q15_to_float(ticks_buffer[0], ticks_buffer_f[0], FREQ_DET_DMA_BUFFER_NUM);
+				arm_mean_f32(ticks_buffer_f[0], FREQ_DET_DMA_BUFFER_NUM, &mean_f[0]);
+				arm_max_no_idx_f32(ticks_buffer_f[0], FREQ_DET_DMA_BUFFER_NUM, &max_f[0]);
+				arm_min_no_idx_f32(ticks_buffer_f[0], FREQ_DET_DMA_BUFFER_NUM, &min_f[0]);
+				
+				logg(AQUISITION, "mean: %f, min: %f, max: %f\n", (double)mean_f[0], (double)min_f[0], (double)max_f[0]);
+
+				gpio_toggle(GPIO_TEST);
+			}
+
+			i++;
+		}
+	}
+
+	vTaskDelete(NULL);
+
+
+}
+
+
+
 int aquisition_init()
 {
 	logg(AQUISITION, "Init\n");
 
-	xTaskCreate(analyse_task, "analyse", 4*1024, NULL, 1, NULL);
+	xTaskCreate(analyse_task, "analyse", 1024, NULL, 1, NULL);
 	
 	return 0;
 }

@@ -81,9 +81,9 @@
 #define DAC_SPI_INST        spi0
 #define DAC_SPI_CLK_SPEED    (2*1000*1000)
 
-#define GPIO_DAC_LDAC    17
+#define GPIO_DAC_LDAC   17
 #define GPIO_DAC_CLK    18
-#define GPIO_DAC_TX        19
+#define GPIO_DAC_TX     19
 #define GPIO_DAC_CS1    21
 #define GPIO_DAC_CS2    20 // I must change this because pinout is not match with the schematic
 #define GPIO_TEST       GPIO_DAC_CS2 
@@ -91,10 +91,7 @@
 
 // Sampling rate can only calculate on hand equation:
 // Ftimer = Fsys * DDS_TIMER_X_FRACTION / DDS_TIMER_Y_FRACTION
-// please change these 4 values for changing sampling frequency future
-#define DDS_FS               50000 // proforma, but can be used
-#define DDS_DELAY_US         20    // proforma, but can be used
-#define DDS_TIMER_X_FRACTION 16
+#define DDS_TIMER_X_FRACTION 8
 #define DDS_TIMER_Y_FRACTION 40000
 
 #define DDS_BUFF_SIZE 128

@@ -8,8 +8,8 @@ typedef int32_t fix32_t;
 #define int2fix32(a) ((fix32_t)(a << 15))
 #define fix2int32(a) ((int32_t)(a >> 15))
 
-#define float2fix32(a) (fix32_t)(a * 32768.0)
-#define fix322float(a) ((float)(a) / 32768.0)
+#define float2fix32(a) (fix32_t)(a * 32768)
+#define fix322float(a) ((double)(a) / 32768)
 
 #define sqrtfix(a) (float2fix(sqrt(fix2float(a))))
 

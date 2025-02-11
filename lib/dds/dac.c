@@ -51,31 +51,15 @@ void dac_init(){
 	uint baud = spi_init(DAC_SPI_INST, DAC_SPI_CLK_SPEED);
 	spi_set_format(DAC_SPI_INST, 16, SPI_CPOL_0, SPI_CPHA_0, SPI_LSB_FIRST);
 	spi_set_slave(DAC_SPI_INST, false);
-	logg(DAC, "Init spi clock speed: %d, actual speed is: %d\n", DAC_SPI_CLK_SPEED, baud);
+	if(baud != DAC_SPI_CLK_SPEED)
+	{
+		logg(DAC, "SPI set speed: %d, real speed: %d\n", DAC_SPI_CLK_SPEED, baud);
+	}
 
-
-
-	// init spi device
-	// spi_write_blocking(DAC_SPI_INST, dacInfo[0].masker, 16);
-	// spi_write_blocking(DAC_SPI_INST, dacInfo[1].masker, 16);
-
-	// init dma for stream
-	// dac_dma_chan = dma_claim_unused_channel(true);
-	// dma_channel_config conf = dma_channel_get_default_config(dac_dma_chan);
-	// channel_config_set_transfer_data_size(&conf, DMA_SIZE_16);
-	// int timer_chan = dma_claim_unused_timer(true);
-	// dma_timer_set_fraction(timer_chan, 256, 64000); // for 50000Hz aquisition
-	// channel_config_set_dreq(&conf, dma_get_timer_dreq(timer_chan));
-	
-	// dma_channel_configure(
-	// 	dac_dma_chan,               
-	// 	&conf,                      
-	// 	&spi_get_hw(DAC_SPI_INST)->dr,  // write address (SPI data register)
-	// 	dac_buffer,                   // The initial read address
-	// 	DAC_BUFFER_SIZE,            // Number of transfers
-	// 	false                       // Don't start immediately.
-	// );
-
+	dac_put(0, 65536>>1);
+	dac_put(1, 65536>>1);
+	dac_put(2, 65536>>1);
+	dac_put(3, 65536>>1);
 
 
 }
@@ -94,13 +78,3 @@ void dac_deinit(){
 void dac_put(dac_chan_e chan, uint16_t value ){
 	_spi_write16(dacInfo[chan].cs_pin, value|dacInfo[chan].masker);
 }
-
-void dac_put_buffer(dac_chan_e chan, uint16_t *value, uint16_t len){
-
-}
-
-void dac_set_wrap_buffer_callback(void (*callback)()){
-
-
-}
-

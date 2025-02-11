@@ -2,7 +2,7 @@
 #define __AQUISITION__
 
 #include "comlib.h"
-
+#include "cmsis.h"
 
 typedef enum channel_e
 {
@@ -14,7 +14,7 @@ typedef enum channel_e
 }channel_e;
 
 
-int aquisition_init();
+void aquisition_init(QueueHandle_t*);
 void aquisition_deinit();
 void start_dma();
 

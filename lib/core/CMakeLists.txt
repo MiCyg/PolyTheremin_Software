@@ -9,8 +9,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 	led_anim 
 	het_generator
 	aquisition
-	# freq_meas
-	# dds
+	dds
 )
 target_sources(${PROJECT_NAME}
     PRIVATE

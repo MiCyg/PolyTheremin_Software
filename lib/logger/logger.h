@@ -36,7 +36,7 @@ typedef enum debug_type_e{
 static struct type_char_t{
 	char * prefix;	
 	bool enable;	
-} _debug_prefixes[DEB_TYPE_NUM] = {
+} _debug_prefixes[DEB_TYPE_NUM] __unused= {
 	[MAIN]			= {.prefix="MAIN",		.enable=true	},
 	[CORE]			= {.prefix="CORE",		.enable=true	},
 	[THER]			= {.prefix="THEREMIN",	.enable=true	},

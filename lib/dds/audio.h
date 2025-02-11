@@ -291,7 +291,7 @@ static audio_sample_t sound_sine[SOUND_LEN] = {
 
 
 
-static audio_t sound_list[SOUND_COUNT] = {
+static audio_t sound_list[SOUND_COUNT] __unused= {
 	{.sound_name = "theremin",	.data = sound_theremin,		.len = SOUND_LEN,},
 	{.sound_name = "cello",		.data = sound_cello,		.len = SOUND_LEN,},
 	{.sound_name = "test0",		.data = sound_test0,		.len = SOUND_LEN,},

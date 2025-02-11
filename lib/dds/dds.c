@@ -1,4 +1,5 @@
 #include "dds.h"
+#include "cmsis.h"
 
 static dds_t oscillators[DAC_CHAN_NB];
 static uint16_t dds_samples_buff[DDS_BUFF_SIZE];
@@ -12,15 +13,16 @@ static uint32_t dma_channel_hw_data[DMA_CHANNEL_SETUP_SIZE];
 static int dma_ctr_chan;
 
 // for interrupt
-volatile bool oveload = false;
+volatile bool overload = false;
 static uint16_t sample_idx;
 static uint16_t osc_idx;
 
-fix32_t dds_fs_fix32 = int2fix32(DDS_FS);
+fix32_t dds_fs_fix32;
 // fix32_t tousand = int2fix32(1000);
 
-TaskHandle_t dds_task_handle;
-
+// TaskHandle_t dds_task_handle;
+SemaphoreHandle_t interrupt_sem;
+BaseType_t xHigherPriorityTaskWoken = pdTRUE;
 
 void osc_init(dds_t *osc){
 	osc->one_sample		= 0;
@@ -31,8 +33,9 @@ void osc_init(dds_t *osc){
 void irq_dma_handler() {
 	if(dma_hw->ints0 & (1u << dma_data_chan)){
 		dma_hw->ints0 = (1u << dma_data_chan);
-		oveload = true;
-		vTaskNotifyGiveFromISR(dds_task_handle, pdFALSE);
+		overload = true;
+		xSemaphoreGiveFromISR(interrupt_sem, &xHigherPriorityTaskWoken);
+		// vTaskNotifyGiveFromISR(dds_task_handle, pdFALSE);
 	}
 }
 
@@ -43,27 +46,19 @@ int dma_init(){
 
 	// (X/Y)*sys_clk, where X is the first 16 bytes and Y is the second
 	dds_timer_channel = dma_claim_unused_timer(false);
+	panic_check(dds_timer_channel == -1, "Cannot claim timer for DDS.");
 
-	if(dds_timer_channel == -1){
-		loge(DDS, "Cannot claim timer for DDS.\n");	
-		return -1;
-	}
+
 	logg(DDS, "calm dma timer: %d\n", dds_timer_channel);
 	dma_timer_set_fraction(dds_timer_channel, DDS_TIMER_X_FRACTION, DDS_TIMER_Y_FRACTION);
 
 
 	// claim dma channels
 	dma_ctr_chan = dma_claim_unused_channel(false);
-	if(dma_ctr_chan == -1){
-		loge(DDS, "Cannot claim free dma");
-		return -2;
-	}
+	panic_check(dma_ctr_chan == -1, "Cannot claim free dma");
 	
 	dma_data_chan = dma_claim_unused_channel(false);
-	if(dma_data_chan == -1){
-		loge(DDS, "Cannot claim free dma\n");
-		return -3;
-	}
+	panic_check(dma_data_chan == -1, "Cannot claim free dma");
 	
 	// SETUP DMA_CONTROL
 	dma_channel_config cconfig = dma_channel_get_default_config(dma_ctr_chan);
@@ -134,31 +129,32 @@ void dds_task()
 	while (1)
 	{
 		
-		xTaskNotifyWait( 0, 0x00, NULL, portMAX_DELAY);
-
-		memset(dds_samples_buff, 0x00, sizeof(dds_samples_buff));
-		
-		osc_idx=0;
-		for (sample_idx = 0; sample_idx < DDS_BUFF_SIZE; sample_idx++)
+		// if(xSemaphoreTake(interrupt_sem, (TickType_t)100) == pdTRUE)
+		if(overload)
 		{
-
-			for (osc_idx = 0; osc_idx < DAC_CHAN_NB; osc_idx++)
+			overload = false;
+			memset(dds_samples_buff, 0x00, sizeof(dds_samples_buff));
+			
+			for (sample_idx = 0; sample_idx < DDS_BUFF_SIZE; sample_idx++)
 			{
-				oscillators[osc_idx].one_sample = *( oscillators[osc_idx].sound->data + ( fix2int32(oscillators[osc_idx].phase_accum) ) );
 
-				dds_samples_buff[sample_idx] += oscillators[osc_idx].one_sample>>2;
+				for (osc_idx = 0; osc_idx < DAC_CHAN_NB; osc_idx++)
+				{
+					oscillators[osc_idx].one_sample = *( oscillators[osc_idx].sound->data + ( fix2int32(oscillators[osc_idx].phase_accum) ) );
 
-				oscillators[osc_idx].phase_accum += oscillators[osc_idx].phase_incr;
-				while (oscillators[osc_idx].phase_accum >= int2fix32(oscillators[osc_idx].sound->len)) oscillators[osc_idx].phase_accum -= int2fix32(oscillators[osc_idx].sound->len);
-				while (oscillators[osc_idx].phase_accum < int2fix32(0)) oscillators[osc_idx].phase_accum += int2fix32(oscillators[osc_idx].phase_incr);
+					dds_samples_buff[sample_idx] += oscillators[osc_idx].one_sample>>2;
+
+					oscillators[osc_idx].phase_accum += oscillators[osc_idx].phase_incr;
+					while (oscillators[osc_idx].phase_accum >= int2fix32(oscillators[osc_idx].sound->len)) oscillators[osc_idx].phase_accum -= int2fix32(oscillators[osc_idx].sound->len);
+					while (oscillators[osc_idx].phase_accum < int2fix32(0)) oscillators[osc_idx].phase_accum += int2fix32(oscillators[osc_idx].phase_incr);
+
+				}
+
+				dds_samples_buff[sample_idx] &= 0b0000111111111111;
+				dds_samples_buff[sample_idx] |= 0b0111000000000000;
 
 			}
-
-			dds_samples_buff[sample_idx] &= 0b0000111111111111;
-			dds_samples_buff[sample_idx] |= 0b0111000000000000;
-
 		}
-
 		// logg(DDS, "phase incr %f\n", fix322float(oscillators[osc_idx].phase_incr));
 		// log_hex(DDS, oscillators[0].sound->data, 16);
 	}
@@ -168,14 +164,38 @@ void dds_task()
 }
 
 
+void set_frequency_task(void * param)
+{
+	QueueHandle_t get_frequences = *(QueueHandle_t*)param;
+
+	float32_t buff[4];
+	int i = 0;
+	while (1)
+	{
+		if(xQueueReceive(get_frequences, buff, (TickType_t)100) == pdPASS )
+		{
+			if(i%10 == 0)
+			{
+				logg(DDS, "freqs: %6.1fHz, %6.1fHz, %6.1fHz, %6.1fHz\n", (double)buff[0], (double)buff[1], (double)buff[2], (double)buff[3]);
+			}
+
+			i++;
+		}
+	}
+}
+
+
 
 // ============================================================
 // ========================= EXTERNAL =========================
 // dds library uses two dma's for write data to spi register. timer1 for dma is used for aquisition. 
 // Every BUFF_LEN/AUDIO_FS second interrupt data buffer depend by frequency table.
 
-int dds_init()
+int dds_init(QueueHandle_t *frequences_queue)
 {
+	float dds_fs = (float)clock_get_hz(clk_sys) * (float)DDS_TIMER_X_FRACTION / (float)DDS_TIMER_Y_FRACTION;
+	dds_fs_fix32 = float2fix32(dds_fs);
+	logg(DDS, "Sample rate: %f\n", fix322float(dds_fs_fix32));
 
 	memset(dds_samples_buff, 0x00, sizeof(dds_samples_buff));
 	
@@ -183,15 +203,19 @@ int dds_init()
 	for (uint8_t ii = 0; ii < DAC_CHAN_NB; ii++)
 	{
 		osc_init(&oscillators[ii]);
-		dds_set_sound(ii, 0);
+		dds_set_sound(ii, 2);
 		dds_set_freq(ii, int2fix32(440));
 		dds_set_amp(ii, int2fix32(1));
 	}
 	
+	logg(DDS, "DAC init\n");
 	dac_init();
+	logg(DDS, "DMA init\n");
 	dma_init();
 
-	xTaskCreate(dds_task, "dds_task", 6*1024, NULL, 1, &dds_task_handle);
+	logg(DDS, "Create tasks\n");
+	xTaskCreate(dds_task, "dds", 6*1024, NULL, 1, NULL);
+	xTaskCreate(set_frequency_task, "dds_get_freq", 2*1024, frequences_queue, 1, NULL);
 
 	return 0;
 }
@@ -201,27 +225,27 @@ int dds_init()
 int dds_deinit()
 {
 
-	vTaskDelete(dds_task_handle);
+	// vTaskDelete(dds_task_handle);
 
-	dma_channel_unclaim(dma_data_chan);
-	dma_channel_unclaim(dma_ctr_chan);
+	// dma_channel_unclaim(dma_data_chan);
+	// dma_channel_unclaim(dma_ctr_chan);
 	// irq_set_enabled(TIMER_IRQ_0, false);
 	return 0;
 }
 
 
-int dds_write_buff(uint8_t buff, uint16_t size){
+// int dds_write_buff(uint8_t buff, uint16_t size){
 
-	return 0;
-}
+// 	return 0;
+// }
 
 int dds_set_sound(uint8_t chan_num, uint8_t sound_idx){
 	
 	if(sound_idx >= SOUND_COUNT) return -1;
 	oscillators[chan_num].sound = &sound_list[sound_idx];
-	oscillators[chan_num].freq_to_incr	= divfix32(int2fix32(oscillators[chan_num].sound->len), int2fix32(DDS_FS));
+	oscillators[chan_num].freq_to_incr	= divfix32(int2fix32(oscillators[chan_num].sound->len), dds_fs_fix32);
 
-	logg(DDS, "Change sound to \'%s\', sound size: %d\n", oscillators[chan_num].sound->sound_name, oscillators[chan_num].sound->len);
+	logg(DDS, "Change sound to \'%s\', sound size: %ld\n", oscillators[chan_num].sound->sound_name, oscillators[chan_num].sound->len);
 	return 0;
 }
 

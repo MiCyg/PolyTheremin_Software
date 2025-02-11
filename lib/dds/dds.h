@@ -20,7 +20,7 @@ typedef struct dds_t{
 	uint16_t one_sample;
 }dds_t;
 
-int dds_init();
+int dds_init(QueueHandle_t*);
 int dds_deinit();
 
 int dds_set_sound(uint8_t osc_num, uint8_t sound_idx);

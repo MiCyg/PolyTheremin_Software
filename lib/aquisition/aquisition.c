@@ -153,8 +153,8 @@ void analyse_task()
 
 	int i = 0;
 	float32_t mean_f[CHAN_NUM];
-	float32_t max_f[CHAN_NUM];
-	float32_t min_f[CHAN_NUM];
+	// float32_t max_f[CHAN_NUM];
+	// float32_t min_f[CHAN_NUM];
 	float32_t freq[CHAN_NUM];
 	while(1)
 	{
@@ -164,21 +164,25 @@ void analyse_task()
 			{
 				gpio_toggle(GPIO_TEST);
 
-				for (uint32_t j = 0; j < FREQ_DET_DMA_BUFFER_NUM; j++)
+				for (uint8_t chan = 0; chan < CHAN_NUM; chan++)
 				{
-					ticks_buffer_f[0][j] = (float32_t)ticks_buffer[0][j];
+				
+					for (uint32_t n = 0; n < FREQ_DET_DMA_BUFFER_NUM; n++)
+					{
+						ticks_buffer_f[chan][n] = (float32_t)ticks_buffer[chan][n];
+					}
+					
+					arm_mean_f32(ticks_buffer_f[chan], FREQ_DET_DMA_BUFFER_NUM, &mean_f[chan]);
+					// arm_max_no_idx_f32(ticks_buffer_f[chan], FREQ_DET_DMA_BUFFER_NUM, &max_f[chan]);
+					// arm_min_no_idx_f32(ticks_buffer_f[chan], FREQ_DET_DMA_BUFFER_NUM, &min_f[chan]);
+					freq[chan] = timer_freq / mean_f[chan];
+
+					
 				}
-				
-				arm_mean_f32(ticks_buffer_f[0], FREQ_DET_DMA_BUFFER_NUM, &mean_f[0]);
-				arm_max_no_idx_f32(ticks_buffer_f[0], FREQ_DET_DMA_BUFFER_NUM, &max_f[0]);
-				arm_min_no_idx_f32(ticks_buffer_f[0], FREQ_DET_DMA_BUFFER_NUM, &min_f[0]);
-				freq[CHAN0] = timer_freq / mean_f[0];
-
-				
-				logg(AQUISITION, "mean: %5.2f, min: %5.2f, max: %5.2f, freq: %f\n", (double)mean_f[0], (double)min_f[0], (double)max_f[0], (double)freq[0]);
-
-
 				gpio_toggle(GPIO_TEST);
+				logg(AQUISITION, "freqs: %6.1fHz, %6.1fHz, %6.1fHz, %6.1fHz\n", (double)freq[0], (double)freq[1], (double)freq[2], (double)freq[3]);
+
+
 			}
 
 			i++;

@@ -21,16 +21,8 @@
 
 // Sampling rate can only calculate on hand equation:
 // Ftimer = Fsys * FREQ_DET_TIMER_X_FRACTION / FREQ_DET_TIMER_Y_FRACTION
-// please change these 4 values for changing sampling frequency future
-#define FREQ_DET_FS                   2000 // proforma, but can be used
-#define FREQ_DET_DELAY_US             500 // proforma, but can be used
-#define FREQ_DET_TIMER_X_FRACTION     1
+#define FREQ_DET_TIMER_X_FRACTION     8
 #define FREQ_DET_TIMER_Y_FRACTION     62500
-
-#if FREQ_DET_FS != 1000000/FREQ_DET_DELAY_US
-#error Bad value of FREQ_DET_DELAY_US
-#endif
-
 
 #define GPIO_DET_MEAS1      6
 #define GPIO_DET_MEAS2      4

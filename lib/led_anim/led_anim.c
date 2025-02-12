@@ -21,7 +21,7 @@ void led_task(){
 
 void led_init(){
 	ws2812_init();
-	xTaskCreate(led_task, "led_task", 1024, NULL, 10, &led_task_handle);
+	xTaskCreate(led_task, "led_task", 1024, NULL, tskIDLE_PRIORITY, &led_task_handle);
 	anim_time_us = 0;
 	color.raw = 0;
 }

@@ -92,7 +92,7 @@
 // Sampling rate can only calculate on hand equation:
 // Ftimer = Fsys * DDS_TIMER_X_FRACTION / DDS_TIMER_Y_FRACTION
 #define DDS_TIMER_X_FRACTION 8
-#define DDS_TIMER_Y_FRACTION 40000
+#define DDS_TIMER_Y_FRACTION 50000
 
 #define DDS_BUFF_SIZE 128
 

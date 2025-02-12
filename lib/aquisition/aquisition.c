@@ -16,14 +16,12 @@ float32_t ticks_buffer_f[CHANNEL_NB][FREQ_DET_DMA_BUFFER_NUM];
 
 void wrap_irq()
 {
-	// gpio_toggle(GPIO_TEST);
 	arm_copy_q15((q15_t*)freq_meas_dma_buffer(0), ticks_buffer[0], FREQ_DET_DMA_BUFFER_NUM);
 	arm_copy_q15((q15_t*)freq_meas_dma_buffer(1), ticks_buffer[1], FREQ_DET_DMA_BUFFER_NUM);
 	arm_copy_q15((q15_t*)freq_meas_dma_buffer(2), ticks_buffer[2], FREQ_DET_DMA_BUFFER_NUM);
 	arm_copy_q15((q15_t*)freq_meas_dma_buffer(3), ticks_buffer[3], FREQ_DET_DMA_BUFFER_NUM);
 
 	xSemaphoreGiveFromISR(wrap_sempahore, &xHigherPriorityTaskWoken);
-	// gpio_toggle(GPIO_TEST);
 }
 
 inline float32_t scale_freq(float32_t in, float32_t in_min, float32_t in_max, float32_t out_min, float32_t out_max)
@@ -61,7 +59,6 @@ void analyse_task(void* param)
 	{
 		if(xSemaphoreTake( wrap_sempahore, 10 ) == pdTRUE)
 		{
-			// gpio_put(GPIO_TEST, 1);
 
 			for (uint8_t chan = 0; chan < CHAN_NUM; chan++)
 			{
@@ -91,9 +88,6 @@ void analyse_task(void* param)
 				loge(AQUISITION, "Cannot put to dds queue!\n");
 			}
 			
-			// gpio_put(GPIO_TEST, 0);
-
-
 		}
 	}
 

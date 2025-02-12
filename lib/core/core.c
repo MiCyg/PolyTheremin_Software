@@ -41,8 +41,32 @@ void core_run()
 	het_generator_init();
 
 	QueueHandle_t aquisitionDdsQueue = xQueueCreate(16, sizeof(float32_t)*CHAN_NUM);
-	dds_init(&aquisitionDdsQueue);
 	aquisition_init(&aquisitionDdsQueue);
+	dds_init(&aquisitionDdsQueue);
+
+
+	dds_set_sound(0, 1);
+	dds_set_sound(1, 1);
+	dds_set_sound(2, 2);
+	dds_set_sound(3, 3);
+	
+	dds_set_amp(0, int2fix32(0));
+	dds_set_amp(1, int2fix32(1));
+	dds_set_amp(2, int2fix32(1));
+	dds_set_amp(3, int2fix32(0));
+	// dds_set_freq(0, int2fix32(990));
+
+
+	// while (1)
+	// {
+	// 	for (uint16_t _freq = 100; _freq < 5000; _freq+=1)
+	// 	{
+	// 		dds_set_freq(0, int2fix32(_freq));
+	// 		vTaskDelay(pdMS_TO_TICKS(10));
+	// 	}
+	// }
+	
+
 
 	vTaskDelete(NULL);
 }

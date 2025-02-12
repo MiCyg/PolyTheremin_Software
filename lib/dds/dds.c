@@ -13,29 +13,57 @@ static uint32_t dma_channel_hw_data[DMA_CHANNEL_SETUP_SIZE];
 static int dma_ctr_chan;
 
 // for interrupt
-volatile bool overload = false;
 static uint16_t sample_idx;
 static uint16_t osc_idx;
 
-fix32_t dds_fs_fix32;
-// fix32_t tousand = int2fix32(1000);
+static fix32_t dds_fs_fix32;
+static volatile bool overload = false;
 
 // TaskHandle_t dds_task_handle;
 SemaphoreHandle_t interrupt_sem;
-BaseType_t xHigherPriorityTaskWoken = pdTRUE;
+BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
-void osc_init(dds_t *osc){
-	osc->one_sample		= 0;
-	osc->phase_accum	= float2fix32(0.0);
-	osc->phase_incr		= float2fix32(1.0);
-}
+
+SemaphoreHandle_t dds_perform_mutex;
+
+
 
 void irq_dma_handler() {
 	if(dma_hw->ints0 & (1u << dma_data_chan)){
 		dma_hw->ints0 = (1u << dma_data_chan);
-		overload = true;
-		xSemaphoreGiveFromISR(interrupt_sem, &xHigherPriorityTaskWoken);
-		// vTaskNotifyGiveFromISR(dds_task_handle, pdFALSE);
+		// overload = true;
+		// xSemaphoreGiveFromISR(interrupt_sem, &xHigherPriorityTaskWoken);
+		if(xSemaphoreTakeFromISR(dds_perform_mutex, &xHigherPriorityTaskWoken) == pdTRUE)
+		{
+			
+			gpio_put(GPIO_TEST, 1);
+			// overload = false;
+
+			memset(dds_samples_buff, 0x00, sizeof(dds_samples_buff));
+			osc_idx = 0;
+
+			for (sample_idx = 0; sample_idx < DDS_BUFF_SIZE; sample_idx++)
+			{
+
+				for (osc_idx = 0; osc_idx < DAC_CHAN_NB; osc_idx++)
+				{
+					oscillators[osc_idx].one_sample = *( oscillators[osc_idx].sound->data + ( fix2int32(oscillators[osc_idx].phase_accum) ) );
+
+					dds_samples_buff[sample_idx] += (uint16_t)fix2int32(multfix32(int2fix32(oscillators[osc_idx].one_sample>>2), oscillators[osc_idx].amp));
+
+					oscillators[osc_idx].phase_accum += oscillators[osc_idx].phase_incr;
+					while (oscillators[osc_idx].phase_accum >= int2fix32(oscillators[osc_idx].sound->len)) oscillators[osc_idx].phase_accum -= int2fix32(oscillators[osc_idx].sound->len);
+					while (oscillators[osc_idx].phase_accum < int2fix32(0)) oscillators[osc_idx].phase_accum += int2fix32(oscillators[osc_idx].phase_incr);
+
+				}
+
+				dds_samples_buff[sample_idx] &= 0b0000111111111111;
+				dds_samples_buff[sample_idx] |= 0b0111000000000000;
+
+			}
+			xSemaphoreGiveFromISR(dds_perform_mutex, &xHigherPriorityTaskWoken);
+			gpio_put(GPIO_TEST, 0);
+		}
 	}
 }
 
@@ -123,61 +151,30 @@ int dma_deinit(){
 }
 
 
-void dds_task()
-{
-
-	while (1)
-	{
-		
-		// if(xSemaphoreTake(interrupt_sem, (TickType_t)100) == pdTRUE)
-		if(overload)
-		{
-			overload = false;
-			memset(dds_samples_buff, 0x00, sizeof(dds_samples_buff));
-			
-			for (sample_idx = 0; sample_idx < DDS_BUFF_SIZE; sample_idx++)
-			{
-
-				for (osc_idx = 0; osc_idx < DAC_CHAN_NB; osc_idx++)
-				{
-					oscillators[osc_idx].one_sample = *( oscillators[osc_idx].sound->data + ( fix2int32(oscillators[osc_idx].phase_accum) ) );
-
-					dds_samples_buff[sample_idx] += oscillators[osc_idx].one_sample>>2;
-
-					oscillators[osc_idx].phase_accum += oscillators[osc_idx].phase_incr;
-					while (oscillators[osc_idx].phase_accum >= int2fix32(oscillators[osc_idx].sound->len)) oscillators[osc_idx].phase_accum -= int2fix32(oscillators[osc_idx].sound->len);
-					while (oscillators[osc_idx].phase_accum < int2fix32(0)) oscillators[osc_idx].phase_accum += int2fix32(oscillators[osc_idx].phase_incr);
-
-				}
-
-				dds_samples_buff[sample_idx] &= 0b0000111111111111;
-				dds_samples_buff[sample_idx] |= 0b0111000000000000;
-
-			}
-		}
-		// logg(DDS, "phase incr %f\n", fix322float(oscillators[osc_idx].phase_incr));
-		// log_hex(DDS, oscillators[0].sound->data, 16);
-	}
-
-	vTaskDelete(NULL);
-
-}
-
-
+#define MEAN_SIZE 8
 void set_frequency_task(void * param)
 {
 	QueueHandle_t get_frequences = *(QueueHandle_t*)param;
 
-	float32_t buff[4];
+	float32_t _freqs[4];
 	int i = 0;
 	while (1)
 	{
-		if(xQueueReceive(get_frequences, buff, (TickType_t)100) == pdPASS )
+		if(xQueueReceive(get_frequences, _freqs, (TickType_t)100) == pdPASS )
 		{
-			if(i%10 == 0)
+			// gpio_toggle(GPIO_TEST);
+
+
+			for (dac_chan_e chan = 0; chan < DAC_CHAN_NB; chan++)
 			{
-				logg(DDS, "freqs: %6.1fHz, %6.1fHz, %6.1fHz, %6.1fHz\n", (double)buff[0], (double)buff[1], (double)buff[2], (double)buff[3]);
+				dds_set_freq(chan, float2fix32(_freqs[chan]));
 			}
+				
+			// if(i%30 == 0)
+			// {
+			// 	// logg(DDS, "freqs: %6.1fHz, %6.1fHz, %6.1fHz, %6.1fHz\n", (double)_freqs[0], (double)_freqs[1], (double)_freqs[2], (double)_freqs[3]);
+			// }
+			// gpio_toggle(GPIO_TEST);
 
 			i++;
 		}
@@ -191,11 +188,24 @@ void set_frequency_task(void * param)
 // dds library uses two dma's for write data to spi register. timer1 for dma is used for aquisition. 
 // Every BUFF_LEN/AUDIO_FS second interrupt data buffer depend by frequency table.
 
+void osc_init(dds_t *osc){
+	osc->one_sample		= 0;
+	osc->phase_accum	= float2fix32(0.0);
+	osc->phase_incr		= float2fix32(1.0);
+}
+
+
 int dds_init(QueueHandle_t *frequences_queue)
 {
+
+
 	float dds_fs = (float)clock_get_hz(clk_sys) * (float)DDS_TIMER_X_FRACTION / (float)DDS_TIMER_Y_FRACTION;
 	dds_fs_fix32 = float2fix32(dds_fs);
 	logg(DDS, "Sample rate: %f\n", fix322float(dds_fs_fix32));
+
+	dds_perform_mutex = xSemaphoreCreateMutex();
+	xSemaphoreGive(dds_perform_mutex);
+
 
 	memset(dds_samples_buff, 0x00, sizeof(dds_samples_buff));
 	
@@ -203,8 +213,8 @@ int dds_init(QueueHandle_t *frequences_queue)
 	for (uint8_t ii = 0; ii < DAC_CHAN_NB; ii++)
 	{
 		osc_init(&oscillators[ii]);
-		dds_set_sound(ii, 2);
-		dds_set_freq(ii, int2fix32(440));
+		dds_set_sound(ii, 0);
+		dds_set_freq(ii, int2fix32(120));
 		dds_set_amp(ii, int2fix32(1));
 	}
 	
@@ -213,9 +223,11 @@ int dds_init(QueueHandle_t *frequences_queue)
 	logg(DDS, "DMA init\n");
 	dma_init();
 
-	logg(DDS, "Create tasks\n");
-	xTaskCreate(dds_task, "dds", 6*1024, NULL, 1, NULL);
-	xTaskCreate(set_frequency_task, "dds_get_freq", 2*1024, frequences_queue, 1, NULL);
+
+	
+	logg(DDS, "Create task\n");
+	
+	xTaskCreate(set_frequency_task, "freq_update", 2*1024, frequences_queue, 1, NULL);
 
 	return 0;
 }
@@ -234,16 +246,16 @@ int dds_deinit()
 }
 
 
-// int dds_write_buff(uint8_t buff, uint16_t size){
 
-// 	return 0;
-// }
-
+#define SET_DELAY_TICKS 10
 int dds_set_sound(uint8_t chan_num, uint8_t sound_idx){
-	
+	if(xSemaphoreTake(dds_perform_mutex, SET_DELAY_TICKS) != pdTRUE) return -1;
+
 	if(sound_idx >= SOUND_COUNT) return -1;
 	oscillators[chan_num].sound = &sound_list[sound_idx];
 	oscillators[chan_num].freq_to_incr	= divfix32(int2fix32(oscillators[chan_num].sound->len), dds_fs_fix32);
+
+	xSemaphoreGive(dds_perform_mutex);
 
 	logg(DDS, "Change sound to \'%s\', sound size: %ld\n", oscillators[chan_num].sound->sound_name, oscillators[chan_num].sound->len);
 	return 0;
@@ -252,19 +264,25 @@ int dds_set_sound(uint8_t chan_num, uint8_t sound_idx){
 
 void dds_set_incr(uint8_t osc_num, fix32_t incr)
 {
+	if(xSemaphoreTake(dds_perform_mutex, SET_DELAY_TICKS) != pdTRUE) return;
 	oscillators[osc_num].phase_incr = incr;
+	xSemaphoreGive(dds_perform_mutex);
 }
 
 
 void dds_set_freq(uint8_t osc_num, fix32_t freq)
 {
+	if(xSemaphoreTake(dds_perform_mutex, SET_DELAY_TICKS) != pdTRUE) return;
 	oscillators[osc_num].phase_incr = multfix32(freq, oscillators[osc_num].freq_to_incr);
+	xSemaphoreGive(dds_perform_mutex);
 
-	// logg(DDS, "set osc%d frequency: %f, incr: %f\n", osc_num, fix322float(freq), fix322float(oscillators[osc_num].phase_incr));
+	// logg(DDS, "Set osc%d frequency: %f, incr: %f\n", osc_num, fix322float(freq), fix322float(oscillators[osc_num].phase_incr));
 }
 
 void dds_set_amp(uint8_t osc_num, fix32_t amp)
 {
+	if(xSemaphoreTake(dds_perform_mutex, SET_DELAY_TICKS) != pdTRUE) return;
 	oscillators[osc_num].amp = amp;
+	xSemaphoreGive(dds_perform_mutex);
 }
 

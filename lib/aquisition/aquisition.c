@@ -3,7 +3,8 @@
 #include "freq_meas.h"
 
 
-
+#define MIN_FREQUENCY 50
+#define MAX_FREQUENCY 5000
 // static uint aquisition_slice_num;
 static SemaphoreHandle_t wrap_sempahore;
 static BaseType_t xHigherPriorityTaskWoken = pdFALSE;
@@ -25,6 +26,22 @@ void wrap_irq()
 	// gpio_toggle(GPIO_TEST);
 }
 
+inline float32_t scale_freq(float32_t in, float32_t in_min, float32_t in_max, float32_t out_min, float32_t out_max)
+{
+	// TODO prevention from max min values
+	// if(in < in_min) return out_min;
+	// if(in > in_max) return out_max;
+	return (out_max - out_min) / (in_max - in_min) * (in - in_min) + out_min; 
+}
+
+inline float32_t freq_bounds(float32_t in, float32_t min, float32_t max)
+{
+	if(in > max) return max;
+	if (in < min) return min;
+	return in;
+}
+
+
 
 
 void analyse_task(void* param)
@@ -38,43 +55,45 @@ void analyse_task(void* param)
 
 	float32_t timer_freq = (float32_t)clock_get_hz(clk_sys);
 
-	int i = 0;
 	float32_t mean_f[CHAN_NUM];
 	float32_t freq[CHAN_NUM];
 	while(1)
 	{
-		if(xSemaphoreTake( wrap_sempahore, 100 ) == pdTRUE)
+		if(xSemaphoreTake( wrap_sempahore, 10 ) == pdTRUE)
 		{
-			if(i%10 == 0)
+			// gpio_put(GPIO_TEST, 1);
+
+			for (uint8_t chan = 0; chan < CHAN_NUM; chan++)
 			{
-				gpio_toggle(GPIO_TEST);
-
-				for (uint8_t chan = 0; chan < CHAN_NUM; chan++)
+			
+				for (uint32_t n = 0; n < FREQ_DET_DMA_BUFFER_NUM; n++)
 				{
-				
-					for (uint32_t n = 0; n < FREQ_DET_DMA_BUFFER_NUM; n++)
-					{
-						ticks_buffer_f[chan][n] = (float32_t)ticks_buffer[chan][n];
-					}
-					
-					arm_mean_f32(ticks_buffer_f[chan], FREQ_DET_DMA_BUFFER_NUM, &mean_f[chan]);
-					freq[chan] = timer_freq / mean_f[chan];
-					
-
-					
+					ticks_buffer_f[chan][n] = (float32_t)ticks_buffer[chan][n];
 				}
 				
-				if(xQueueSend(put_frequences_queue, freq, 0) != pdPASS)
-				{
-					loge(AQUISITION, "Cannot put to dds queue!\n");
-				}
-				gpio_toggle(GPIO_TEST);
-				
-
+				arm_mean_f32(ticks_buffer_f[chan], FREQ_DET_DMA_BUFFER_NUM, &mean_f[chan]);
+				freq[chan] = timer_freq / mean_f[chan];
 
 			}
 
-			i++;
+			freq[0] = scale_freq(freq[0], 9000, 14000, 1000, 300);
+			freq[0] = freq_bounds(freq[0], MIN_FREQUENCY, MAX_FREQUENCY);
+			freq[1] = scale_freq(freq[1], 9000, 15000, 1000, 300);
+			freq[1] = freq_bounds(freq[1], MIN_FREQUENCY, MAX_FREQUENCY);
+			freq[2] = scale_freq(freq[2], 25000, 37000, 1000, 300);
+			freq[2] = freq_bounds(freq[2], MIN_FREQUENCY, MAX_FREQUENCY);
+			freq[3] = scale_freq(freq[3], 46000, 41000, 1000, 300);
+			freq[3] = freq_bounds(freq[3], MIN_FREQUENCY, MAX_FREQUENCY);
+			
+
+			if(xQueueSend(put_frequences_queue, freq, 0) != pdPASS)
+			{
+				loge(AQUISITION, "Cannot put to dds queue!\n");
+			}
+			
+			// gpio_put(GPIO_TEST, 0);
+
+
 		}
 	}
 
@@ -89,8 +108,8 @@ void aquisition_init(QueueHandle_t *dds_queue)
 {
 	logg(AQUISITION, "Create analyse task\n");
 
-	xTaskCreate(analyse_task, "analyse", 1024, dds_queue, 1, NULL);
-	
+	xTaskCreate(analyse_task, "analyse", 1024, dds_queue, 0, NULL);
+
 }
 
 void aquisition_deinit()

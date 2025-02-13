@@ -4,8 +4,8 @@
 
 // Project info
 #define PROJECT_NAME             "PolyTheremin"
-#define PROJECT_VERSION          "1.0.0"
-#define PROJECT_VERSION_DESCRIBE "First version of PolyTheremin project"
+#define PROJECT_VERSION          "V1.0.0"
+#define PROJECT_VERSION_DESCRIBE "First working version"
 
 // Hardware configuration
 

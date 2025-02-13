@@ -18,7 +18,7 @@ int main( void )
 
 	xTaskCreate(core_run, CORE_NAME, CORE_STACK_SIZE, NULL, 0, NULL);
 
-    vTaskStartScheduler(); // start FreeRTOS
+    vTaskStartScheduler();
 	
 	while(1);
 }

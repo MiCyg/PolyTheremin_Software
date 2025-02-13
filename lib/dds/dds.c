@@ -31,8 +31,6 @@ SemaphoreHandle_t dds_perform_mutex;
 void irq_dma_handler() {
 	if(dma_hw->ints0 & (1u << dma_data_chan)){
 		dma_hw->ints0 = (1u << dma_data_chan);
-		// overload = true;
-		// xSemaphoreGiveFromISR(interrupt_sem, &xHigherPriorityTaskWoken);
 		if(xSemaphoreTakeFromISR(dds_perform_mutex, &xHigherPriorityTaskWoken) == pdTRUE)
 		{
 			
@@ -40,7 +38,6 @@ void irq_dma_handler() {
 			// overload = false;
 
 			memset(dds_samples_buff, 0x00, sizeof(dds_samples_buff));
-			osc_idx = 0;
 
 			for (sample_idx = 0; sample_idx < DDS_BUFF_SIZE; sample_idx++)
 			{
@@ -77,7 +74,7 @@ int dma_init(){
 	panic_check(dds_timer_channel == -1, "Cannot claim timer for DDS.");
 
 
-	logg(DDS, "calm dma timer: %d", dds_timer_channel);
+	logg(DDS, "Calm dma timer: %d", dds_timer_channel);
 	dma_timer_set_fraction(dds_timer_channel, DDS_TIMER_X_FRACTION, DDS_TIMER_Y_FRACTION);
 
 

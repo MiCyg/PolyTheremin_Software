@@ -10,7 +10,6 @@ TaskHandle_t led_task_handle;
 void led_update();
 
 void led_task(){
-	logg(LED, "Create led task on core %d", get_core_num());
 	while(1){
 		led_update();
 		vTaskDelay(pdMS_TO_TICKS(10));

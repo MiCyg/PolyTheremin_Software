@@ -44,7 +44,7 @@ int ws2812_init(){
     ws2812_offset = pio_add_program(ws2812_pio, &ws2812_program);
 	panic_check(ws2812_sm == -1, "Cannot add program");
 
-	logg(LED, "Claim sm: %d, offset: %d\n", ws2812_sm, ws2812_offset);
+	logg(LED, "Claim sm: %d, offset: %d", ws2812_sm, ws2812_offset);
     ws2812_program_init(ws2812_pio, ws2812_sm, ws2812_offset, GPIO_UI_LED, WS2812_SPEED, WS2812_IS_RGBW);
 	return 0;
 }

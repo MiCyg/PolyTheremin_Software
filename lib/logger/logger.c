@@ -11,7 +11,7 @@ void logger_init(){
 	#if SPIN_LOCK_ENABLE == 1
 		_logger_sync_num = spin_lock_claim_unused(false);
 		if(_logger_sync_num == -1){
-			logg(LOGGER, "Cannot claim spin lock for logger.\n");
+			logg(LOGGER, "Cannot claim spin lock for logger.");
 		}
 		if(_logger_sync_num)
 		_logger_sync_count = spin_lock_init(_logger_sync_num) ;
@@ -20,23 +20,23 @@ void logger_init(){
 
 void logger_test_colors(){
 
-	logg(LOGGER, "TEST COLORS!\n");
-	logc(LOGGER, COLOR_BLACK, 			"COLOR_BLACK\n");
-	logc(LOGGER, COLOR_RED, 			"COLOR_RED\n");
-	logc(LOGGER, COLOR_GREEN, 			"COLOR_GREEN\n");
-	logc(LOGGER, COLOR_ORANGE, 			"COLOR_ORANGE\n");
-	logc(LOGGER, COLOR_BLUE, 			"COLOR_BLUE\n");
-	logc(LOGGER, COLOR_PURPLE, 			"COLOR_PURPLE\n");
-	logc(LOGGER, COLOR_CYAN, 			"COLOR_CYAN\n");
-	logc(LOGGER, COLOR_LIGHT_GRAY, 		"COLOR_LIGHT_GRAY\n");
-	logc(LOGGER, COLOR_DARK_GRAY, 		"COLOR_DARK_GRAY\n");
-	logc(LOGGER, COLOR_LIGHT_RED, 		"COLOR_LIGHT_RED\n");
-	logc(LOGGER, COLOR_LIGHT_GREEN, 	"COLOR_LIGHT_GREEN\n");
-	logc(LOGGER, COLOR_YELLOW, 			"COLOR_YELLOW\n");
-	logc(LOGGER, COLOR_LIGHT_BLUE, 		"COLOR_LIGHT_BLUE\n");
-	logc(LOGGER, COLOR_LIGHT_PURPLE,	"COLOR_LIGHT_PURPLE\n");
-	logc(LOGGER, COLOR_LIGHT_CYAN, 		"COLOR_LIGHT_CYAN\n");
-	logc(LOGGER, COLOR_WHITE, 			"COLOR_WHITE\n");
+	logg(LOGGER, "TEST COLORS!");
+	logc(LOGGER, COLOR_BLACK, 			"COLOR_BLACK");
+	logc(LOGGER, COLOR_RED, 			"COLOR_RED");
+	logc(LOGGER, COLOR_GREEN, 			"COLOR_GREEN");
+	logc(LOGGER, COLOR_ORANGE, 			"COLOR_ORANGE");
+	logc(LOGGER, COLOR_BLUE, 			"COLOR_BLUE");
+	logc(LOGGER, COLOR_PURPLE, 			"COLOR_PURPLE");
+	logc(LOGGER, COLOR_CYAN, 			"COLOR_CYAN");
+	logc(LOGGER, COLOR_LIGHT_GRAY, 		"COLOR_LIGHT_GRAY");
+	logc(LOGGER, COLOR_DARK_GRAY, 		"COLOR_DARK_GRAY");
+	logc(LOGGER, COLOR_LIGHT_RED, 		"COLOR_LIGHT_RED");
+	logc(LOGGER, COLOR_LIGHT_GREEN, 	"COLOR_LIGHT_GREEN");
+	logc(LOGGER, COLOR_YELLOW, 			"COLOR_YELLOW");
+	logc(LOGGER, COLOR_LIGHT_BLUE, 		"COLOR_LIGHT_BLUE");
+	logc(LOGGER, COLOR_LIGHT_PURPLE,	"COLOR_LIGHT_PURPLE");
+	logc(LOGGER, COLOR_LIGHT_CYAN, 		"COLOR_LIGHT_CYAN");
+	logc(LOGGER, COLOR_WHITE, 			"COLOR_WHITE");
 
 
 }

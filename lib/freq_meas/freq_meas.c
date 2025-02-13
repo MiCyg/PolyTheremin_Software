@@ -42,7 +42,7 @@ void freq_chans_init(){
 		gpio_set_irq_enabled_with_callback(freq_det_vars[chan].gpio, GPIO_IRQ_EDGE_FALL, true, common_gpio_cb);
 		freq_det_vars[chan].dma_chan = dma_claim_unused_channel(false);
 		if(freq_det_vars[chan].dma_chan == -1){
-			logg(FREQ_DET, "Cannot claim dma hardware. Frequency detector channel %d.\n", chan);
+			logg(FREQ_DET, "Cannot claim dma hardware. Frequency detector channel %d.", chan);
 		}
 
 		freq_det_vars[chan].dma_config = dma_channel_get_default_config(freq_det_vars[chan].dma_chan);
@@ -86,10 +86,10 @@ int timer_dma_init(){
 	freq_meas_timer_channel = dma_claim_unused_timer(false);
 	
 	if(freq_meas_timer_channel == -1){
-		loge(FREQ_DET, "Cannot claim timer for DDS.\n");	
+		loge(FREQ_DET, "Cannot claim timer for DDS.");	
 		return -1;
 	}
-	logg(FREQ_DET, "calm dma timer: %d\n", freq_meas_timer_channel);
+	logg(FREQ_DET, "calm dma timer: %d", freq_meas_timer_channel);
 	dma_timer_set_fraction(freq_meas_timer_channel, FREQ_DET_TIMER_X_FRACTION, FREQ_DET_TIMER_Y_FRACTION);
 	return 0;
 }

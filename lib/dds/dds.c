@@ -77,7 +77,7 @@ int dma_init(){
 	panic_check(dds_timer_channel == -1, "Cannot claim timer for DDS.");
 
 
-	logg(DDS, "calm dma timer: %d\n", dds_timer_channel);
+	logg(DDS, "calm dma timer: %d", dds_timer_channel);
 	dma_timer_set_fraction(dds_timer_channel, DDS_TIMER_X_FRACTION, DDS_TIMER_Y_FRACTION);
 
 
@@ -172,7 +172,7 @@ void set_frequency_task(void * param)
 				
 			// if(i%30 == 0)
 			// {
-			// 	// logg(DDS, "freqs: %6.1fHz, %6.1fHz, %6.1fHz, %6.1fHz\n", (double)_freqs[0], (double)_freqs[1], (double)_freqs[2], (double)_freqs[3]);
+			// 	// logg(DDS, "freqs: %6.1fHz, %6.1fHz, %6.1fHz, %6.1fHz", (double)_freqs[0], (double)_freqs[1], (double)_freqs[2], (double)_freqs[3]);
 			// }
 			// gpio_toggle(GPIO_TEST);
 
@@ -201,7 +201,7 @@ int dds_init(QueueHandle_t *frequences_queue)
 
 	float dds_fs = (float)clock_get_hz(clk_sys) * (float)DDS_TIMER_X_FRACTION / (float)DDS_TIMER_Y_FRACTION;
 	dds_fs_fix32 = float2fix32(dds_fs);
-	logg(DDS, "Sample rate: %f\n", fix322float(dds_fs_fix32));
+	logg(DDS, "Sample rate: %f", fix322float(dds_fs_fix32));
 
 	dds_perform_mutex = xSemaphoreCreateMutex();
 	xSemaphoreGive(dds_perform_mutex);
@@ -218,14 +218,14 @@ int dds_init(QueueHandle_t *frequences_queue)
 		dds_set_amp(ii, int2fix32(1));
 	}
 	
-	logg(DDS, "DAC init\n");
+	logg(DDS, "DAC init");
 	dac_init();
-	logg(DDS, "DMA init\n");
+	logg(DDS, "DMA init");
 	dma_init();
 
 
 	
-	logg(DDS, "Create task\n");
+	logg(DDS, "Create task");
 	
 	xTaskCreate(set_frequency_task, "freq_update", 2*1024, frequences_queue, 1, NULL);
 
@@ -257,7 +257,7 @@ int dds_set_sound(uint8_t chan_num, uint8_t sound_idx){
 
 	xSemaphoreGive(dds_perform_mutex);
 
-	logg(DDS, "Change sound to \'%s\', sound size: %ld\n", oscillators[chan_num].sound->sound_name, oscillators[chan_num].sound->len);
+	logg(DDS, "Change sound to \'%s\', sound size: %ld", oscillators[chan_num].sound->sound_name, oscillators[chan_num].sound->len);
 	return 0;
 }
 
@@ -276,7 +276,7 @@ void dds_set_freq(uint8_t osc_num, fix32_t freq)
 	oscillators[osc_num].phase_incr = multfix32(freq, oscillators[osc_num].freq_to_incr);
 	xSemaphoreGive(dds_perform_mutex);
 
-	// logg(DDS, "Set osc%d frequency: %f, incr: %f\n", osc_num, fix322float(freq), fix322float(oscillators[osc_num].phase_incr));
+	// logg(DDS, "Set osc%d frequency: %f, incr: %f", osc_num, fix322float(freq), fix322float(oscillators[osc_num].phase_incr));
 }
 
 void dds_set_amp(uint8_t osc_num, fix32_t amp)

@@ -75,6 +75,7 @@ void _logger_end_block();
 				LOG_TAB(type);							\
 				LOG_CAT(_debug_prefixes[type].prefix);	\
 				printf(__VA_ARGS__);					\
+				printf("\n");							\
 			}											\
 		}												\
 		_logger_end_block();							\
@@ -94,6 +95,7 @@ void _logger_end_block();
 				LOG_CAT(_debug_prefixes[type].prefix);	\
 				printf(__VA_ARGS__);					\
 				LOG_ENDCOLOR();							\
+				printf("\n");							\
 			}											\
 		}												\
 		_logger_end_block();							\
@@ -113,6 +115,7 @@ void _logger_end_block();
 				LOG_CAT(_debug_prefixes[type].prefix);	\
 				printf(__VA_ARGS__);					\
 				LOG_ENDCOLOR();							\
+				printf("\n");							\
 			}											\
 		}												\
 		_logger_end_block();							\
@@ -132,6 +135,7 @@ void _logger_end_block();
 				LOG_CAT(_debug_prefixes[type].prefix);	\
 				printf(__VA_ARGS__);					\
 				LOG_ENDCOLOR();							\
+				printf("\n");							\
 			}											\
 		}												\
 		_logger_end_block();							\
@@ -151,6 +155,7 @@ void _logger_end_block();
 				LOG_CAT(_debug_prefixes[type].prefix);	\
 				printf(__VA_ARGS__);					\
 				LOG_ENDCOLOR();							\
+				printf("\n");							\
 			}											\
 		}												\
 		_logger_end_block();							\

@@ -10,7 +10,7 @@ TaskHandle_t led_task_handle;
 void led_update();
 
 void led_task(){
-	logg(LED, "Create led task on core %d\n", get_core_num());
+	logg(LED, "Create led task on core %d", get_core_num());
 	while(1){
 		led_update();
 		vTaskDelay(pdMS_TO_TICKS(10));
@@ -112,7 +112,7 @@ void led_anim_blink_of_dead(){
 		}
 	}
 	
-	// logg(LED, "%8d, r:%3d, g:%3d, b:%3d\n", anim_time_us, color.colors.red, color.colors.green, color.colors.blue);
+	// logg(LED, "%8d, r:%3d, g:%3d, b:%3d", anim_time_us, color.colors.red, color.colors.green, color.colors.blue);
 	if(anim_time_diff_us >= BLINK_OF_DEAD_TIME){
 		// end of animation
 		anim_time_us = time_us_32();
@@ -232,10 +232,10 @@ void led_set_anim(led_animation_e anim){
 
 		anim_time_us = time_us_32();
 		anim_time_diff_us = 0;
-		logg(LED, "Set animation number: %d\n", anim);
+		logg(LED, "Set animation number: %d", anim);
 	}
 	else{
-		loge(LED, "Anim number is bad.\n");
+		loge(LED, "Anim number is bad.");
 	}
 }
 

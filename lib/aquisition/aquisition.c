@@ -85,7 +85,7 @@ void analyse_task(void* param)
 
 			if(xQueueSend(put_frequences_queue, freq, 0) != pdPASS)
 			{
-				loge(AQUISITION, "Cannot put to dds queue!\n");
+				loge(AQUISITION, "Cannot put to dds queue!");
 			}
 			
 		}
@@ -100,7 +100,7 @@ void analyse_task(void* param)
 
 void aquisition_init(QueueHandle_t *dds_queue)
 {
-	logg(AQUISITION, "Create analyse task\n");
+	logg(AQUISITION, "Create analyse task");
 
 	xTaskCreate(analyse_task, "analyse", 1024, dds_queue, 0, NULL);
 
@@ -108,6 +108,6 @@ void aquisition_init(QueueHandle_t *dds_queue)
 
 void aquisition_deinit()
 {
-	logg(AQUISITION, "Deinit\n");
+	logg(AQUISITION, "Deinit");
 	// TODO
 }

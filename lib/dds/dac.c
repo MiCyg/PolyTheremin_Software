@@ -54,7 +54,7 @@ void dac_init()
 	spi_set_slave(DAC_SPI_INST, false);
 	if (baud != DAC_SPI_CLK_SPEED)
 	{
-		logi(DAC, "SPI set speed: %d, real speed: %d", DAC_SPI_CLK_SPEED, baud);
+		logw(DAC, "SPI set speed: %d, real speed: %d", DAC_SPI_CLK_SPEED, baud);
 	}
 
 	dac_put(0, 65536 >> 1);

@@ -68,5 +68,11 @@ void core_run()
 	button_init();
 	button_set_press_callback(increment_sound, NULL);
 
+	// For tests
+	// dds_set_amp(0, int2fix32(1));
+	// dds_set_amp(1, int2fix32(0));
+	// dds_set_amp(2, int2fix32(0));
+	// dds_set_amp(3, int2fix32(0));
+
 	vTaskDelete(NULL);
 }

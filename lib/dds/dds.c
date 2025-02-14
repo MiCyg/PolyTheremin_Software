@@ -157,7 +157,12 @@ void set_frequency_task(void *param)
 			{
 				dds_set_freq(chan, float2fix32(_freqs[chan]));
 			}
-
+			
+			// for tests
+			// if(i%200 == 0)
+			// {
+			// 	logg(DDS, "freqs: %6.1fHz, %6.1fHz, %6.1fHz, %6.1fHz", (double)_freqs[0], (double)_freqs[1], (double)_freqs[2], (double)_freqs[3]);
+			// }
 			i++;
 		}
 	}

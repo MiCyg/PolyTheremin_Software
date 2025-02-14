@@ -20,7 +20,7 @@ void neofetch_message(){
 	printf(COLOR_RED "      .^~!!~:  ^!!!!!!!!~..^~!!~^       " FETCH_COLOR "OS:"         NOCOLOR " freeRTOS %s\n", tskKERNEL_VERSION_NUMBER);
 	printf(COLOR_RED "      ~!~^:  ....:^^^^:::....:~!!^      " FETCH_COLOR "Board:"      NOCOLOR " %s\n",          PICO_BOARD);
 	printf(COLOR_RED "      ^:. :^~~!~~^    :~~!!~~:..:^      " FETCH_COLOR "Build type:" NOCOLOR " %s\n",          PICO_CMAKE_BUILD_TYPE);
-	printf(COLOR_RED "    :^  .~!!!!!!!!~  ^!!!!!!!!~. .^:    " FETCH_COLOR "Uptime:"     NOCOLOR " %ld[us]\n",     time_us_32());
+	printf(COLOR_RED "    :^  .~!!!!!!!!~  ^!!!!!!!!~. .^:    " FETCH_COLOR "Uptime:"     NOCOLOR " %ld[ms]\n",     time_us_32()/1000);
 	printf(COLOR_RED "  .~!!: ^!!!!!!!!!~. ^!!!!!!!!!~ ^!!~.  " FETCH_COLOR "CPU:"        NOCOLOR " %s (%d)\n",     "Cortex M0+", configNUMBER_OF_CORES);
 	printf(COLOR_RED "  ~!!!: ^!!!!!!!!!:   ~!!!!!!!!~ :!!!^  " FETCH_COLOR "Sys clock:"  NOCOLOR " %.0fkHz\n",     (double)(clock_get_hz(clk_sys))/1000);
 	printf(COLOR_RED "  ^!!~.  ^~!!!!~^......:^~!!!~^.  ~!!^  " FETCH_COLOR "Flash:"      NOCOLOR " %dMB\n",        PICO_FLASH_SIZE_BYTES/1024/1024);

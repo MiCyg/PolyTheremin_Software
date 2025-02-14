@@ -11,22 +11,17 @@ void led_update();
 
 void led_task()
 {
-
-	TickType_t tick_timer;
-
 	while (1)
 	{
-		if (tick_timer - xTaskGetTickCount() > pdMS_TO_TICKS(10))
-		{
-			tick_timer = xTaskGetTickCount();
-			led_update();
-		}
+		led_update();
+		vTaskDelay(pdMS_TO_TICKS(10));
 	}
 }
 
 void led_init()
 {
 	ws2812_init();
+	
 	xTaskCreate(led_task, "led_task", 1024, NULL, tskIDLE_PRIORITY, &led_task_handle);
 	anim_time_us = 0;
 	color.raw = 0;

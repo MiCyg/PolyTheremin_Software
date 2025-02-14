@@ -7,20 +7,17 @@
 #include "hardware/dma.h"
 #include "fixfloat.h"
 
-
-
-
-
-typedef struct dds_t{
+typedef struct dds_t
+{
 	audio_t *sound;
 	fix32_t phase_accum;
 	fix32_t phase_incr;
 	fix32_t freq_to_incr;
 	fix32_t amp;
 	uint16_t one_sample;
-}dds_t;
+} dds_t;
 
-int dds_init(QueueHandle_t*);
+int dds_init(QueueHandle_t *);
 int dds_deinit();
 
 int dds_set_sound(uint8_t osc_num, uint8_t sound_idx);

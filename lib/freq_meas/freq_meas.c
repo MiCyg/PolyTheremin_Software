@@ -4,11 +4,10 @@
 // ============== STATIC FUNCTIONS ==============
 
 freq_meas_channel_t freq_det_vars[CHANNEL_NB] = {
-	{.gpio=GPIO_DET_MEAS1},
-	{.gpio=GPIO_DET_MEAS2},
-	{.gpio=GPIO_DET_MEAS3},
-	{.gpio=GPIO_DET_MEAS4}
-};
+	{.gpio = GPIO_DET_MEAS1},
+	{.gpio = GPIO_DET_MEAS2},
+	{.gpio = GPIO_DET_MEAS3},
+	{.gpio = GPIO_DET_MEAS4}};
 
 int freq_meas_timer_channel;
 static void (*dma_wrap_cb)() = NULL;
@@ -25,10 +24,10 @@ static inline void common_gpio_cb(uint gpio, uint32_t event_mask)
 			break;
 		}
 	}
-	
 }
 
-void freq_chans_init(){
+void freq_chans_init()
+{
 
 	for (freq_meas_channel_num_e chan = 0; chan < CHANNEL_NB; chan++)
 	{
@@ -41,9 +40,7 @@ void freq_chans_init(){
 
 		gpio_set_irq_enabled_with_callback(freq_det_vars[chan].gpio, GPIO_IRQ_EDGE_FALL, true, common_gpio_cb);
 		freq_det_vars[chan].dma_chan = dma_claim_unused_channel(false);
-		if(freq_det_vars[chan].dma_chan == -1){
-			logg(FREQ_DET, "Cannot claim dma hardware. Frequency detector channel %d.", chan);
-		}
+		panic_check(freq_det_vars[chan].dma_chan == -1, "Cannot claim dma hardware. Frequency detector channel %d.", chan);
 
 		freq_det_vars[chan].dma_config = dma_channel_get_default_config(freq_det_vars[chan].dma_chan);
 		channel_config_set_transfer_data_size(&freq_det_vars[chan].dma_config, DMA_SIZE_16);
@@ -54,20 +51,17 @@ void freq_chans_init(){
 		dma_channel_set_irq0_enabled(freq_det_vars[chan].dma_chan, true);
 
 		dma_channel_configure(
-			freq_det_vars[chan].dma_chan, 
-			&freq_det_vars[chan].dma_config, 
-			freq_det_vars[chan].dma_buff, 
-			&freq_det_vars[chan].det_freq_count, 
-			FREQ_DET_DMA_BUFFER_NUM, 
-			false
-		);
-		
-
+			freq_det_vars[chan].dma_chan,
+			&freq_det_vars[chan].dma_config,
+			freq_det_vars[chan].dma_buff,
+			&freq_det_vars[chan].det_freq_count,
+			FREQ_DET_DMA_BUFFER_NUM,
+			false);
 	}
-
 }
 
-void freq_chans_deinit(){
+void freq_chans_deinit()
+{
 	for (freq_meas_channel_num_e chan = 0; chan < CHANNEL_NB; chan++)
 	{
 		gpio_init(freq_det_vars[chan].gpio);
@@ -80,77 +74,76 @@ void freq_chans_deinit(){
 	}
 }
 
-int timer_dma_init(){
+int timer_dma_init()
+{
 
 	// (X/Y)*sys_clk, where X is the first 16 bytes and Y is the second
 	freq_meas_timer_channel = dma_claim_unused_timer(false);
-	
-	if(freq_meas_timer_channel == -1){
-		loge(FREQ_DET, "Cannot claim timer for DDS.");	
-		return -1;
-	}
-	logg(FREQ_DET, "Calm dma timer: %d", freq_meas_timer_channel);
+	panic_check(freq_meas_timer_channel == -1, "Cannot claim timer for dma");
+	logi(FREQ_DET, "Calm dma timer: %d", freq_meas_timer_channel);
+
 	dma_timer_set_fraction(freq_meas_timer_channel, FREQ_DET_TIMER_X_FRACTION, FREQ_DET_TIMER_Y_FRACTION);
 	return 0;
 }
 
-int timer_dma_deinit(){
+int timer_dma_deinit()
+{
 	// dma_timer_unclaim(freq_meas_timer_channel);
-	return 0 ;
+	return 0;
 }
 
-void channels_dma_trigger(){
+void channels_dma_trigger()
+{
 
 	uint32_t val = 0;
 	for (freq_meas_channel_num_e chan = 0; chan < CHANNEL_NB; chan++)
 	{
-		val |= (1<<freq_det_vars[chan].dma_chan);
+		val |= (1 << freq_det_vars[chan].dma_chan);
 	}
 	dma_hw->multi_channel_trigger = val;
-
 }
 
 volatile static uint8_t _dma_interrupts = 0x00;
-void dma_wrap_handler(){
-
+void dma_wrap_handler()
+{
 
 	for (uint8_t chan = 0; chan < CHANNEL_NB; chan++)
 	{
-		if(dma_hw->intr & (1u<<freq_det_vars[chan].dma_chan)){
+		if (dma_hw->intr & (1u << freq_det_vars[chan].dma_chan))
+		{
 			dma_hw->ints0 = 1u << freq_det_vars[chan].dma_chan;
-			_dma_interrupts |= (1<<chan);
+			_dma_interrupts |= (1 << chan);
 		}
 	}
 
 	// synchronised data from all dma channels
-	if( (_dma_interrupts&0b00001111) == 0b00001111){
+	if ((_dma_interrupts & 0b00001111) == 0b00001111)
+	{
 		_dma_interrupts = 0;
 
-		if(dma_wrap_cb) dma_wrap_cb();
+		if (dma_wrap_cb)
+			dma_wrap_cb();
 
 		for (freq_meas_channel_num_e chan = 0; chan < CHANNEL_NB; chan++)
 		{
 			dma_channel_configure(
-				freq_det_vars[chan].dma_chan, 
-				&freq_det_vars[chan].dma_config, 
-				freq_det_vars[chan].dma_buff, 
-				&freq_det_vars[chan].det_freq_count, 
-				FREQ_DET_DMA_BUFFER_NUM, 
-				false
-			);
+				freq_det_vars[chan].dma_chan,
+				&freq_det_vars[chan].dma_config,
+				freq_det_vars[chan].dma_buff,
+				&freq_det_vars[chan].det_freq_count,
+				FREQ_DET_DMA_BUFFER_NUM,
+				false);
 
 			dma_channel_set_irq0_enabled(freq_det_vars[chan].dma_chan, true);
-
 		}
 
 		channels_dma_trigger();
 	}
 }
 
-
 // ============== EXTERNAL FUNCTIONS ==============
-void freq_meas_init(){
-	
+void freq_meas_init()
+{
 
 	timer_dma_init();
 
@@ -160,21 +153,22 @@ void freq_meas_init(){
 	irq_set_enabled(DMA_IRQ_0, true);
 
 	channels_dma_trigger();
-
 }
 
-void freq_meas_deinit(){
+void freq_meas_deinit()
+{
 	freq_chans_deinit();
 	irq_set_enabled(DMA_IRQ_0, false);
 	timer_dma_deinit();
 	freq_meas_set_wrap_cb(NULL);
 }
 
-uint16_t* freq_meas_dma_buffer(freq_meas_channel_num_e chan){
+uint16_t *freq_meas_dma_buffer(freq_meas_channel_num_e chan)
+{
 	return freq_det_vars[chan].dma_buff;
 }
 
-void freq_meas_set_wrap_cb(void (*function)()){
+void freq_meas_set_wrap_cb(void (*function)())
+{
 	dma_wrap_cb = function;
 }
-

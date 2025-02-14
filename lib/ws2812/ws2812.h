@@ -1,12 +1,13 @@
 #ifndef __WS2812__
 #define __WS2812__
 
-
 #include "comlib.h"
 #include "hardware/pio.h"
 
-typedef union color_t {
-	struct {
+typedef union color_t
+{
+	struct
+	{
 		uint8_t blue;
 		uint8_t red;
 		uint8_t green;
@@ -14,7 +15,7 @@ typedef union color_t {
 	} colors;
 
 	uint32_t raw;
-}color_t;
+} color_t;
 
 int ws2812_init();
 int ws2812_deinit();

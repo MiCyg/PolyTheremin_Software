@@ -11,12 +11,10 @@ typedef enum channel_e
 	CHAN2,
 	CHAN3,
 	CHAN_NUM
-}channel_e;
+} channel_e;
 
-
-void aquisition_init(QueueHandle_t*);
+void aquisition_init(QueueHandle_t *);
 void aquisition_deinit();
 void start_dma();
-
 
 #endif // __AQUISITION__

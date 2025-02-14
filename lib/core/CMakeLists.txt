@@ -10,6 +10,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
 	het_generator
 	aquisition
 	dds
+	button
 )
 target_sources(${PROJECT_NAME}
     PRIVATE

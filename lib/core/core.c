@@ -3,6 +3,7 @@
 #include "het_generator.h"
 #include "aquisition.h"
 #include "dds.h"
+#include "button.h"
 
 #define FETCH_COLOR COLOR_CYAN
 void neofetch_message(){
@@ -37,6 +38,19 @@ void neofetch_message(){
 
 }
 
+void increment_sound()
+{
+	static uint8_t sound_idx = 0;
+	dds_set_sound(0, sound_idx);
+	dds_set_sound(1, sound_idx);
+	dds_set_sound(2, sound_idx);
+	dds_set_sound(3, sound_idx);
+
+	sound_idx++;
+	sound_idx = sound_idx % SOUND_COUNT; 
+}
+
+
 
 void core_run()
 {
@@ -50,6 +64,9 @@ void core_run()
 	QueueHandle_t aquisitionDdsQueue = xQueueCreate(16, sizeof(float32_t)*CHAN_NUM);
 	aquisition_init(&aquisitionDdsQueue);
 	dds_init(&aquisitionDdsQueue);
+
+	button_init();
+	button_set_press_callback(increment_sound, NULL);
 
 	vTaskDelete(NULL);
 }

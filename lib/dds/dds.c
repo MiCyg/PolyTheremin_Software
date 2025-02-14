@@ -141,17 +141,34 @@ int dma_deinit()
 	return 0;
 }
 
-#define MEAN_SIZE 8
+
+static uint8_t avg_idx = 0;
+static float32_t avg_freqs[4][DDS_FREQ_CHANGE_FILER_SIZE];
+
+void freq_mov_avg(float32_t *_freqs, float32_t *result)
+{
+	for (uint8_t chan = 0; chan < 4; chan++)
+	{
+		avg_freqs[chan][avg_idx] = _freqs[chan];
+		arm_mean_f32(avg_freqs[chan], DDS_FREQ_CHANGE_FILER_SIZE, &result[chan]);
+	}
+
+	avg_idx++;
+	avg_idx = avg_idx & (DDS_FREQ_CHANGE_FILER_SIZE-1);
+}
+
+
 void set_frequency_task(void *param)
 {
 	QueueHandle_t get_frequences = *(QueueHandle_t *)param;
 
-	float32_t _freqs[4];
+	static float32_t _freqs[4];
 	int i = 0;
 	while (1)
 	{
 		if (xQueueReceive(get_frequences, _freqs, (TickType_t)100) == pdPASS)
 		{
+			freq_mov_avg(_freqs, _freqs);
 
 			for (dac_chan_e chan = 0; chan < DAC_CHAN_NB; chan++)
 			{

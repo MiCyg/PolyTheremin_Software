@@ -62,6 +62,7 @@
 #define DDS_TIMER_Y_FRACTION 50000
 
 #define DDS_BUFF_SIZE 128
+#define DDS_FREQ_CHANGE_FILER_SIZE 32
 
 // ================================
 // ======== USER INTERFACE ========

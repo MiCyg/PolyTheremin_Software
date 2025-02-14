@@ -8,4 +8,5 @@ add_subdirectory(aquisition)
 add_subdirectory(freq_meas)
 add_subdirectory(cmsis)
 add_subdirectory(dds)
+add_subdirectory(button)
 

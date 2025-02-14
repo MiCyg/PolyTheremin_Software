@@ -33,6 +33,7 @@ void neofetch_message(){
 	printf(COLOR_RED "              .~!!!!!!!!!:              \n" NOCOLOR                           );
 	printf(COLOR_RED "               .:^~~~~~^.               \n" NOCOLOR                           );
 	printf(COLOR_RED "                    .                   \n" NOCOLOR                           );
+	printf("\n");
 
 }
 

@@ -19,38 +19,25 @@ if (EXISTS ${picoVscode})
     include(${picoVscode})
 endif()
 # ====================================================================================
-set(PICO_BOARD pico CACHE STRING "Board type")
+set(PICO_BOARD polyTheremin_board CACHE STRING "Board type")
 
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
-pico_sdk_init()
 
-project(PolyTheremin_Software
-    VERSION 1.0.0
-    DESCRIPTION "Polyphonic Theremin Software for RP2040"
-    # TODO HOMEPAGE_URL "https://my.happy.polytheremin.page"
-    LANGUAGES C CXX ASM
-)
+project(PolyTheremin_Software LANGUAGES C CXX ASM)
+pico_sdk_init()
 
 # Release configuration
 set(PROJECT_NAME ${CMAKE_PROJECT_NAME})
-set(VERSION_NUMBER "1.0.0")
-set(VERSION_DESCRIPITION "")
 
 set(MAIN_SRC_DIRECTORY "${CMAKE_SOURCE_DIR}")
 set(FREERTOS_SRC_DIRECTORY "${CMAKE_SOURCE_DIR}/freertos/FreeRTOS-Kernel")
 set(FREERTOS_CFG_DIRECTORY "${CMAKE_SOURCE_DIR}/freertos")
-
+set(PICO_BOARD_HEADER_DIRS ${CMAKE_SOURCE_DIR}/boards) 
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-
-
-
-
-
 
 include(${FREERTOS_SRC_DIRECTORY}/portable/ThirdParty/GCC/RP2040/FreeRTOS_Kernel_import.cmake)
 

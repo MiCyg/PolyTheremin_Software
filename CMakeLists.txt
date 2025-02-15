@@ -19,6 +19,7 @@ if (EXISTS ${picoVscode})
     include(${picoVscode})
 endif()
 # ====================================================================================
+set(PICO_BOARD_HEADER_DIRS "${CMAKE_SOURCE_DIR}/boards")
 set(PICO_BOARD polyTheremin_board CACHE STRING "Board type")
 
 # Pull in Raspberry Pi Pico SDK (must be before project)
@@ -33,7 +34,7 @@ set(PROJECT_NAME ${CMAKE_PROJECT_NAME})
 set(MAIN_SRC_DIRECTORY "${CMAKE_SOURCE_DIR}")
 set(FREERTOS_SRC_DIRECTORY "${CMAKE_SOURCE_DIR}/freertos/FreeRTOS-Kernel")
 set(FREERTOS_CFG_DIRECTORY "${CMAKE_SOURCE_DIR}/freertos")
-set(PICO_BOARD_HEADER_DIRS ${CMAKE_SOURCE_DIR}/boards) 
+
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)

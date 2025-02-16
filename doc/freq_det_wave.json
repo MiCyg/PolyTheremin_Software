@@ -1,0 +1,9 @@
+{ signal: [
+	{ name: "Signal in", wave: "0.1..0..1...", node: '..C.....D....' },
+	{ name: "", node: '..A.....B...'  },
+	{ name: "", node: '..A.....B...'  },
+	{ name: "Sys clock", wave: "pppppppppppp" },
+	{ name: "Timer",     wave: "229222229222", data: ["7", "8", "0", "1", "2", "3", "4", "5", "0", "1", "2", "3"] },
+  ],
+	edge:["C-dA IRQ", "D+dB IRQ"]
+  }

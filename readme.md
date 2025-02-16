@@ -1,11 +1,13 @@
 # PolyTheremin Software
 
+![PolyTheremin under development](doc/PolyTheremin_testPlatform.png)
+
 ## Overview
 
 This repository contains the software implementation of the [PolyTheremin project](https://github.com/MiCyg/PolyTheremin) (Currently on the development). The code has been tested on my [testing platform](https://github.com/MiCyg/PolyTheremin_Hardware), connected to four metal antennas.
 This project implements a polyphonic theremin using the RP2040 microcontroller, utilizing FreeRTOS for real-time processing and the CMSIS-DSP library for frequency calculations and calculate decorelator in future.
 
-![PolyTheremin under development](doc/PolyTheremin_testPlatform.png)
+[![YouTube](http://i.ytimg.com/vi/87GYFTiLsME/hqdefault.jpg)](https://www.youtube.com/watch?v=87GYFTiLsME)
 
 ## Features
 

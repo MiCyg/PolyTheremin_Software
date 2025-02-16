@@ -33,7 +33,7 @@ void irq_dma_handler()
 		if (xSemaphoreTakeFromISR(dds_perform_mutex, &xHigherPriorityTaskWoken) == pdTRUE)
 		{
 
-			gpio_put(GPIO_TEST, 1);
+			// gpio_put(GPIO_TEST, 1);
 			// overload = false;
 
 			memset(dds_samples_buff, 0x00, sizeof(dds_samples_buff));

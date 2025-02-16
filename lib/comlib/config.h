@@ -19,12 +19,12 @@
 #define FREQ_DET_TIMER_X_FRACTION     8
 #define FREQ_DET_TIMER_Y_FRACTION     62500
 
-#define FREQ_DET_DMA_BUFFER_NUM             32
+#define FREQ_DET_DMA_BUFFER_NUM       16
 
-#define GPIO_DET_MEAS1      6
-#define GPIO_DET_MEAS2      4
-#define GPIO_DET_MEAS3      2
-#define GPIO_DET_MEAS4      8
+#define GPIO_DET_MEAS1      8
+#define GPIO_DET_MEAS2      2
+#define GPIO_DET_MEAS3      4
+#define GPIO_DET_MEAS4      6
 
 
 // ================================
@@ -39,10 +39,10 @@
 #define HET_GEN1_GPIO        10
 #define HET_GEN2_GPIO        12
 #define HET_GEN3_GPIO        14
-#define HET_GEN0_FREQ        580000
-#define HET_GEN1_FREQ        578000
-#define HET_GEN2_FREQ        532000
-#define HET_GEN3_FREQ        526000
+#define HET_GEN0_FREQ        560000
+#define HET_GEN1_FREQ        634000
+#define HET_GEN2_FREQ        566000
+#define HET_GEN3_FREQ        560000
 
 // ================================
 // ============ DDS/DAC ===========
@@ -62,7 +62,7 @@
 #define DDS_TIMER_Y_FRACTION 50000
 
 #define DDS_BUFF_SIZE 128
-#define DDS_FREQ_CHANGE_FILER_SIZE 32
+#define DDS_FREQ_CHANGE_FILER_SIZE 128
 
 // ================================
 // ======== USER INTERFACE ========

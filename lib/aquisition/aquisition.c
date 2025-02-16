@@ -7,15 +7,19 @@
 // static uint aquisition_slice_num;
 static SemaphoreHandle_t wrap_sempahore;
 static BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-q15_t ticks_buffer[CHANNEL_NB][FREQ_DET_DMA_BUFFER_NUM];
-float32_t ticks_buffer_f[CHANNEL_NB][FREQ_DET_DMA_BUFFER_NUM];
+float32_t ticks_buffer[CHANNEL_NB][FREQ_DET_DMA_BUFFER_NUM];
 
+static uint8_t chan;
+static uint16_t idx;
 void wrap_irq()
 {
-	arm_copy_q15((q15_t *)freq_meas_dma_buffer(0), ticks_buffer[0], FREQ_DET_DMA_BUFFER_NUM);
-	arm_copy_q15((q15_t *)freq_meas_dma_buffer(1), ticks_buffer[1], FREQ_DET_DMA_BUFFER_NUM);
-	arm_copy_q15((q15_t *)freq_meas_dma_buffer(2), ticks_buffer[2], FREQ_DET_DMA_BUFFER_NUM);
-	arm_copy_q15((q15_t *)freq_meas_dma_buffer(3), ticks_buffer[3], FREQ_DET_DMA_BUFFER_NUM);
+	for (chan = 0; chan < CHANNEL_NB; chan++)
+	{
+		for (idx = 0; idx < FREQ_DET_DMA_BUFFER_NUM; idx++)
+		{
+			ticks_buffer[chan][idx] = (float32_t)freq_meas_dma_buffer(chan)[idx];
+		}
+	}
 
 	xSemaphoreGiveFromISR(wrap_sempahore, &xHigherPriorityTaskWoken);
 }
@@ -37,6 +41,26 @@ inline float32_t freq_bounds(float32_t in, float32_t min, float32_t max)
 	return in;
 }
 
+
+typedef struct calibration_t
+{
+	float32_t in_min;
+	float32_t in_max;
+	float32_t out_min;
+	float32_t out_max;
+}calibration_t;
+
+calibration_t frequency_calibration[CHANNEL_NB]=
+{
+	{.in_min=20000, .in_max=25000,.out_min=100, .out_max=500 },
+	{.in_min=20000, .in_max=25000,.out_min=100, .out_max=500 },
+	{.in_min=20000, .in_max=25000,.out_min=100, .out_max=500 },
+	{.in_min=20000, .in_max=25000,.out_min=100, .out_max=500 }
+};
+
+
+
+
 void analyse_task(void *param)
 {
 	QueueHandle_t put_frequences_queue = *(QueueHandle_t *)param;
@@ -48,39 +72,42 @@ void analyse_task(void *param)
 
 	float32_t timer_freq = (float32_t)clock_get_hz(clk_sys);
 
-	float32_t mean_f[CHAN_NUM];
 	float32_t freq[CHAN_NUM];
+	int i = 0;
 	while (1)
 	{
 		if (xSemaphoreTake(wrap_sempahore, 10) == pdTRUE)
 		{
-
 			for (uint8_t chan = 0; chan < CHAN_NUM; chan++)
 			{
-
-				for (uint32_t n = 0; n < FREQ_DET_DMA_BUFFER_NUM; n++)
-				{
-					ticks_buffer_f[chan][n] = (float32_t)ticks_buffer[chan][n];
-				}
-
-				arm_mean_f32(ticks_buffer_f[chan], FREQ_DET_DMA_BUFFER_NUM, &mean_f[chan]);
-				freq[chan] = timer_freq / mean_f[chan];
+				// arm_clip_f32(ticks_buffer[chan], ticks_buffer[chan], FREQ_DET_MIN_TICKS, FREQ_DET_MAX_TICKS, FREQ_DET_DMA_BUFFER_NUM);
+				arm_mean_f32(ticks_buffer[chan], FREQ_DET_DMA_BUFFER_NUM, &freq[chan]);
+				freq[chan] = timer_freq / freq[chan];
+				freq[chan] = scale_freq(freq[chan], 
+					frequency_calibration[chan].in_min, 
+					frequency_calibration[chan].in_max, 
+					frequency_calibration[chan].out_min, 
+					frequency_calibration[chan].out_max
+				);
+				freq[chan] = freq_bounds(freq[chan], MIN_FREQUENCY, MAX_FREQUENCY);
+				
 			}
-
-			// TODO calibration
-			freq[0] = scale_freq(freq[0], 9000, 14000, 1000, 300);
-			freq[0] = freq_bounds(freq[0], MIN_FREQUENCY, MAX_FREQUENCY);
-			freq[1] = scale_freq(freq[1], 9000, 15000, 1000, 300);
-			freq[1] = freq_bounds(freq[1], MIN_FREQUENCY, MAX_FREQUENCY);
-			freq[2] = scale_freq(freq[2], 25000, 37000, 1000, 300);
-			freq[2] = freq_bounds(freq[2], MIN_FREQUENCY, MAX_FREQUENCY);
-			freq[3] = scale_freq(freq[3], 46000, 41000, 1000, 300);
-			freq[3] = freq_bounds(freq[3], MIN_FREQUENCY, MAX_FREQUENCY);
-
+			
+			if(i%100 == 0)
+			{
+				// for (uint16_t idx = 0; idx < FREQ_DET_DMA_BUFFER_NUM; idx++)
+				// {
+				// 	// logg(AQUISITION, "ticks %.3f %.3f %.3f %.3f", (double)ticks_buffer[0][idx], (double)ticks_buffer[1][idx], (double)ticks_buffer[2][idx], (double)ticks_buffer[3][idx]);
+				// }
+				logg(AQUISITION, "freqs: %10.3f %10.3f %10.3f %10.3f", (double)freq[3], (double)freq[2], (double)freq[1], (double)freq[0]);
+			}
+			
+			
 			if (xQueueSend(put_frequences_queue, freq, 0) != pdPASS)
 			{
 				loge(AQUISITION, "Cannot put to dds queue!");
 			}
+			i++;
 		}
 	}
 
